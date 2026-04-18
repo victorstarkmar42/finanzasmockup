@@ -161,9 +161,11 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 <button class="mb" onclick="ST('f',this)">Futuros</button>
 <button class="mb" onclick="ST('p',this)">Préstamos</button>
 <button class="mb" onclick="ST('b',this)">Cuentas Débito</button>
+<button class="mb" onclick="ST('v',this)">🚗 Vehículos</button>
+<button class="mb" onclick="ST('cfg',this)">⚙ Config</button>
 </div>
 <div id="p-g" class="mod vis"></div><div id="p-a" class="mod"></div><div id="p-d" class="mod"></div>
-<div id="p-r" class="mod"></div><div id="p-f" class="mod"></div><div id="p-p" class="mod"></div><div id="p-b" class="mod"></div>
+<div id="p-r" class="mod"></div><div id="p-f" class="mod"></div><div id="p-p" class="mod"></div><div id="p-b" class="mod"></div><div id="p-v" class="mod"></div><div id="p-cfg" class="mod"></div>
 </div>
 
 <script>
@@ -196,8 +198,10 @@ const nextPayDate=(fp,fr,n)=>{if(!fp)return null;const d=new Date(fp+'T00:00:00'
 // ═══ STATE ════════════════════════════════════════════════════════════════════
 let D={m:[],ah:[],de:[],rc:[],ln:[],wa:[],fut:[],cAh:[],cDe:[],accts:[]};
 try{const s=localStorage.getItem('f360v12');if(s)D=JSON.parse(s)}catch(e){}
-['cAh','cDe','ln','fut','accts','cInst'].forEach(k=>{if(!D[k])D[k]=[]});
+['cAh','cDe','ln','fut','accts','cInst','cfgCats','cfgExtraConcepts','cfgTaxes','vehs'].forEach(k=>{if(!D[k])D[k]=[]});
+if(!D.nomCfg)D.nomCfg={regimen:'IMSS',segVida:false};
 if(!Array.isArray(D.wa))D.wa=D.wa?[D.wa]:[];
+if(!D.xferLog)D.xferLog=[];
 const sv=()=>localStorage.setItem('f360v12',JSON.stringify(D));
 
 let ct='g',cp='mes',cFam='ALIMENTOS',cC='',cI='Efectivo',cR=false,cFr='mensual',cNQ='Q1',cCT='TARJETA',CH={},tblP=0,lnRole='lend';
@@ -229,15 +233,39 @@ D.accts=[
 {id:uid(),nombre:'Azteca',banco:'Azteca',saldo:500,origen:'Efectivo',tags:['Respaldo']}
 ];
 D.fut=[{id:uid(),d:'iPhone 16',c:24999,ms:12,e:5000,t:'m',ok:false,pm:1666.58},{id:uid(),d:'Viaje Cancún',c:15000,ms:6,e:3000,t:'m',ok:true,pm:2000}];
+// DEMO VEHÍCULOS
+const vExpLic=new Date();vExpLic.setMonth(vExpLic.getMonth()+2);
+const vExpSeg=new Date();vExpSeg.setDate(vExpSeg.getDate()+25);
+const vExpTC=new Date();vExpTC.setMonth(vExpTC.getMonth()+8);
+D.vehs=[{id:uid(),nombre:'Mi carro',tipo:'auto',marca:'Nissan',
+  licencias:[{id:uid(),tipo:'Automovilista',titular:'Yo',costo:780,fPago:d(5),fVence:vExpLic.toISOString().split('T')[0],rec:true,periodo:'bianual'}],
+  placas:[{id:uid(),tipo:'Particular',estado:'Yucatán',costo:1850,fPago:d(3),rec:true,periodo:'anual',fVence:vExpTC.toISOString().split('T')[0]}],
+  tarjCirc:[{id:uid(),costo:650,fPago:d(3),fVence:vExpTC.toISOString().split('T')[0],rec:true,periodo:'anual'}],
+  seguros:[{id:uid(),aseguradora:'Qualitas',tipoCobertura:'Amplia',costo:12500,plazo:'Anual',fPago:d(1),fVence:vExpSeg.toISOString().split('T')[0],poliza:'QUA-2024-98765',notas:'Deducible $8,000'}]
+},{id:uid(),nombre:'Moto trabajo',tipo:'moto',marca:'Honda',
+  licencias:[{id:uid(),tipo:'Motociclista',titular:'Yo',costo:450,fPago:d(10),fVence:vExpLic.toISOString().split('T')[0],rec:true,periodo:'bianual'}],
+  placas:[{id:uid(),tipo:'Moto',estado:'Yucatán',costo:950,fPago:d(8),rec:true,periodo:'anual'}],
+  tarjCirc:[],
+  seguros:[{id:uid(),aseguradora:'AXA',tipoCobertura:'Responsabilidad civil',costo:3800,plazo:'Anual',fPago:d(5),fVence:vExpSeg.toISOString().split('T')[0],poliza:'AXA-M-12345',notas:''}]
+}];
 sv();
 }
 
+// ═══ DYNAMIC CATS ═════════════════════════════════════════════════════════════
+const allCats=()=>{const merged={...CATS};(D.cfgCats||[]).forEach(c=>{merged[c.key]={n:c.name,iv:c.iva||0,ie:c.ieps||0,r:c.rule||'',rec:c.rec||false,c:c.concepts||[]}});return merged};
+
 // ═══ CALC ══════════════════════════════════════════════════════════════════════
-const calcR=()=>{const mv=gmp(),ing=mv.filter(m=>m.t==='ingreso').reduce((s,m)=>s+m.monto,0),gN=mv.filter(m=>m.t==='egreso'&&RN.includes(m.fam)).reduce((s,m)=>s+m.monto,0),gD=mv.filter(m=>m.t==='egreso'&&RD.includes(m.fam)).reduce((s,m)=>s+m.monto,0),gA=mv.filter(m=>m.t==='egreso'&&RA.includes(m.fam)).reduce((s,m)=>s+m.monto,0);return{ing,gN,gD,gA,lN:ing*.5,lD:ing*.3,lA:ing*.2,pN:ing>0?gN/(ing*.5)*100:0,pD:ing>0?gD/(ing*.3)*100:0,pA:ing>0?gA/(ing*.2)*100:0}};
+const calcR=()=>{const ac2=allCats();const mv=gmp(),ing=mv.filter(m=>m.t==='ingreso').reduce((s,m)=>s+m.monto,0),gN=mv.filter(m=>m.t==='egreso'&&(ac2[m.fam]?.r==='N')).reduce((s,m)=>s+m.monto,0),gD=mv.filter(m=>m.t==='egreso'&&(ac2[m.fam]?.r==='D')).reduce((s,m)=>s+m.monto,0),gA=mv.filter(m=>m.t==='egreso'&&(ac2[m.fam]?.r==='A')).reduce((s,m)=>s+m.monto,0);return{ing,gN,gD,gA,lN:ing*.5,lD:ing*.3,lA:ing*.2,pN:ing>0?gN/(ing*.5)*100:0,pD:ing>0?gD/(ing*.3)*100:0,pA:ing>0?gA/(ing*.2)*100:0}};
 const calcFi=()=>{const mv=gmp(),isr=mv.filter(m=>m.t==='ingreso'&&m.deds).reduce((s,m)=>s+(m.deds?.isr||0)+(m.deds?.imss||0),0),ivC=mv.filter(m=>m.t==='egreso').reduce((s,m)=>s+(m.iv||0)+(m.ivTicket||0),0),ieps=mv.filter(m=>m.t==='egreso').reduce((s,m)=>s+(m.ie||0),0),tot=isr+ivC+ieps,bruto=mv.filter(m=>m.t==='ingreso').reduce((s,m)=>s+(m.bruto||m.monto),0);return{isr,iva:ivC,ieps,tot,bruto,pct:bruto>0?tot/bruto*100:0}};
 const gAlerts=()=>{const r=calcR(),a=[];if(r.ing===0)return a;if(r.pN>100)a.push({t:'err',m:`🚨 NECESIDADES ${r.pN.toFixed(0)}% (+$${fm(r.gN-r.lN)})`});else if(r.pN>85)a.push({t:'warn',m:`⚠️ Necesidades ${r.pN.toFixed(0)}%`});if(r.pD>100)a.push({t:'err',m:`🚨 DESEOS ${r.pD.toFixed(0)}% (+$${fm(r.gD-r.lD)})`});else if(r.pD>85)a.push({t:'warn',m:`⚠️ Deseos ${r.pD.toFixed(0)}%`});if(r.pA<50&&r.ing>0)a.push({t:'warn',m:`💡 Ahorro ${r.pA.toFixed(0)}%`});
 // Loan payment alerts
 D.ln.forEach(l=>{const np=nextPayDate(l.fPago,l.frec||'mensual',l.pagados);if(np){const dd=df(np);if(dd!==null&&dd<=3&&dd>=0)a.push({t:'warn',m:`📅 Pago ${l.role==='borrow'?'a '+l.persona:'de '+l.persona} en ${dd}d — $${fm(l.pago)} (${l.desc})`})}});
+// Vehicle alerts
+(D.vehs||[]).forEach(v=>{const vn=v.nombre||v.marca;
+(v.seguros||[]).forEach(sg=>{const dd=df(sg.fVence);if(dd!==null&&dd<=30&&dd>=0)a.push({t:'warn',m:`🛡 Seguro ${sg.aseguradora} de ${vn} vence en ${dd}d (${fDate(sg.fVence)}) — $${fm(sg.costo)}`});if(dd!==null&&dd<0)a.push({t:'err',m:`🛡 Seguro ${sg.aseguradora} de ${vn} VENCIDO hace ${Math.abs(dd)}d`})});
+(v.licencias||[]).forEach(l=>{const dd=df(l.fVence);if(dd!==null&&dd<=30&&dd>=0)a.push({t:'warn',m:`🪪 Licencia ${l.tipo} vence en ${dd}d`});if(dd!==null&&dd<0)a.push({t:'err',m:`🪪 Licencia ${l.tipo} VENCIDA`})});
+(v.tarjCirc||[]).forEach(tc=>{const dd=df(tc.fVence);if(dd!==null&&dd<=30&&dd>=0)a.push({t:'warn',m:`📄 Tarjeta circulación de ${vn} vence en ${dd}d`});if(dd!==null&&dd<0)a.push({t:'err',m:`📄 Tarjeta circulación de ${vn} VENCIDA`})});
+});
 return a};
 
 // WA
@@ -254,7 +282,7 @@ const dD=(id,lb,dt,cl,lid)=>{if(CH[id])CH[id].destroy();const ctx=document.getEl
 // ═══ GASTOS MODULE ════════════════════════════════════════════════════════════
 let curFTab='eg'; // track which form sub-tab is active
 const allINS=()=>[...INS,...(D.cInst||[]),'Otra...'];
-const rG=()=>{tblP=0;if(!D.cInst)D.cInst=[];const fo=Object.entries(CATS).filter(([k])=>!['NOMINA','EXTRA'].includes(k)).map(([k,v])=>`<option value="${k}"${k===cFam?' selected':''}>${v.n}</option>`).join('');const cs=(CATS[cFam]?.c||[]).map(cn);if(!cs.includes(cC))cC=cs[0]||'';const co=cs.map(c=>`<option${c===cC?' selected':''}>${c}</option>`).join('');const io=allINS().map(i=>`<option${i===cI?' selected':''}>${i}</option>`).join('');const isR=!!CATS[cFam]?.rec,isC=cFam==='CREDITO',isSup=cC==='Super (IVA ticket)';const frO=Object.entries(FR).map(([k,v])=>`<option value="${k}"${cFr===k?' selected':''}>${v.l}</option>`).join('');
+const rG=()=>{tblP=0;const ac=allCats();const fo=Object.entries(ac).filter(([k])=>!['NOMINA','EXTRA'].includes(k)).map(([k,v])=>`<option value="${k}"${k===cFam?' selected':''}>${v.n}</option>`).join('');const catObj=ac[cFam]||CATS[cFam]||{c:[]};let csArr=[...(catObj.c||[]).map(cn)];const extras=(D.cfgExtraConcepts||[]).filter(e=>e.cat===cFam).map(e=>e.name);csArr=[...csArr,...extras];if(!csArr.includes(cC))cC=csArr[0]||'';const co=csArr.map(c=>`<option${c===cC?' selected':''}>${c}</option>`).join('');const io=allINS().map(i=>`<option${i===cI?' selected':''}>${i}</option>`).join('');const isR=!!(catObj.rec),isC=cFam==='CREDITO',isSup=cC==='Super (IVA ticket)';const frO=Object.entries(FR).map(([k,v])=>`<option value="${k}"${cFr===k?' selected':''}>${v.l}</option>`).join('');
 document.getElementById('p-g').innerHTML=`<div class="gl"><div><div class="pnl"><div class="ftabs"><button class="ft ${curFTab==='eg'?'on':''}" onclick="curFTab='eg';sFt('eg',this)">Gasto</button><button class="ft ${curFTab==='in'?'on':''}" onclick="curFTab='in';sFt('in',this)">Nómina</button><button class="ft ${curFTab==='ex'?'on':''}" onclick="curFTab='ex';sFt('ex',this)">Extra</button></div>
 <div id="f-eg" style="display:${curFTab==='eg'?'block':'none'}"><div class="fld"><label>Categoría</label><select onchange="cFam=this.value;cC=cn((CATS[cFam]?.c||[])[0])||'';cR=!!CATS[cFam]?.rec;cFr=cfr((CATS[cFam]?.c||[])[0])||'mensual';rG()">${fo}</select></div><div class="fld"><label>Concepto</label><select id="sl-c" onchange="cC=this.value;rG()">${co}</select></div><div class="fld"><label>Institución</label><select id="sl-i" onchange="if(this.value==='Otra...'){const v=prompt('Nombre de la institución:');if(v){D.cInst.push(v);cI=v;sv();rG()}}else{cI=this.value}">${io}</select></div>${isC?`<div class="fg2"><div class="fld"><label>Movido</label><input id="inp-p" type="number" step="0.01"></div><div class="fld"><label>Comisión</label><input id="inp-m" type="number" step="0.01"></div></div>`:`<div class="fld"><label>Monto ($)</label><input id="inp-m" type="number" step="0.01"></div>`}${isSup?`<div class="super-box"><label>🧾 IVA ticket</label><input id="inp-ivt" type="number" step="0.01"></div>`:''}<div class="fld"><label>Fecha</label><input id="inp-f" type="date" value="${td()}"></div>${isR?`<div class="tog-r" onclick="cR=!cR;rG()"><div class="tog${cR?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px;font-weight:500">Recurrente</span></div>${cR?`<div class="fld"><label>Frecuencia</label><select onchange="cFr=this.value">${frO}</select></div>`:''}`:''}
 <button class="bp" onclick="sM()">+ Registrar gasto</button></div>
@@ -262,13 +290,14 @@ document.getElementById('p-g').innerHTML=`<div class="gl"><div><div class="pnl">
 <div id="f-ex" style="display:${curFTab==='ex'?'block':'none'}"><div class="fld"><label>Tipo</label><select id="ex-c">${CATS.EXTRA.c.map(c=>`<option>${c}</option>`).join('')}</select></div><div class="fld"><label>Monto ($)</label><input id="ex-m" type="number" step="0.01"></div><div class="fld"><label>Fecha</label><input id="ex-f" type="date" value="${td()}"></div><button class="bg2" onclick="sEx()">+ Extra</button></div>
 </div></div><div><div class="pnl"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><h3>Historial</h3><select id="fil-c" onchange="tblP=0;rT()" style="font-size:10px;padding:3px 6px;width:auto"></select></div><div class="barchart" id="bch"></div><div class="tbl"><table><thead><tr><th style="width:50px">Fecha</th><th>Concepto</th><th style="width:70px;text-align:right">Monto</th><th style="width:22px"></th></tr></thead><tbody id="tb"></tbody></table></div><div class="pag" id="pag"></div></div></div></div>`;bFIn();rT()};
 // Build nomina form INDEPENDENTLY so Q buttons don't reset to Gasto tab
-const bFIn=()=>{const el=document.getElementById('f-in');if(!el)return;el.innerHTML=`<div class="qbs"><button class="qb${cNQ==='Q1'?' on':''}" onclick="cNQ='Q1';bFIn()">Quincena 1</button><button class="qb${cNQ==='Q2'?' on':''}" onclick="cNQ='Q2';bFIn()">Quincena 2</button></div><div class="fld"><label>Sueldo en cuenta ($)</label><input id="n-n" type="number" step="0.01"></div><div class="fld"><label>Vales / beneficios ($)</label><input id="n-v" type="number" step="0.01" value="0"></div>${cNQ==='Q2'?`<div class="ded"><div class="ded-t">Retenciones del mes</div><div class="fg2"><div class="fld"><label>ISR</label><input id="n-isr" type="number" step="0.01"></div><div class="fld"><label>IMSS</label><input id="n-imss" type="number" step="0.01"></div><div class="fld"><label>F. Ahorro</label><input id="n-fa" type="number" step="0.01"></div><div class="fld"><label>Seg. Auto</label><input id="n-sa" type="number" step="0.01"></div></div></div>`:''}<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="${td()}"></div><button class="bg2" onclick="sNom()">+ Registrar nómina</button>`};
+if(!D.nomCfg)D.nomCfg={regimen:'IMSS',segVida:false};
+const bFIn=()=>{const el=document.getElementById('f-in');if(!el)return;const cfg=D.nomCfg||{regimen:'IMSS',segVida:false};el.innerHTML=`<div class="qbs"><button class="qb${cNQ==='Q1'?' on':''}" onclick="cNQ='Q1';bFIn()">Quincena 1</button><button class="qb${cNQ==='Q2'?' on':''}" onclick="cNQ='Q2';bFIn()">Quincena 2</button></div><div class="fld"><label>Sueldo en cuenta ($)</label><input id="n-n" type="number" step="0.01"></div><div class="fld"><label>Vales / beneficios ($)</label><input id="n-v" type="number" step="0.01" value="0"></div>${cNQ==='Q2'?`<div class="ded"><div class="ded-t">Retenciones del mes</div><div class="fg2"><div class="fld"><label>ISR</label><input id="n-isr" type="number" step="0.01"></div><div class="fld"><label>Régimen</label><select id="n-reg" onchange="D.nomCfg.regimen=this.value;sv()"><option value="IMSS"${cfg.regimen==='IMSS'?' selected':''}>IMSS</option><option value="ISSSTE"${cfg.regimen==='ISSSTE'?' selected':''}>ISSSTE</option></select></div><div class="fld"><label>Cuota ${cfg.regimen} ($)</label><input id="n-imss" type="number" step="0.01"></div><div class="fld"><label>F. Ahorro ($)</label><input id="n-fa" type="number" step="0.01"></div><div class="fld"><label>Seg. Auto ($)</label><input id="n-sa" type="number" step="0.01"></div></div><div class="tog-r" style="margin-top:5px" onclick="D.nomCfg.segVida=!D.nomCfg.segVida;sv();bFIn()"><div class="tog${cfg.segVida?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px;font-weight:500">Seguro de vida (opcional)</span></div>${cfg.segVida?`<div class="fld"><label>Seguro de vida ($)</label><input id="n-sv" type="number" step="0.01"></div>`:''}</div>`:''}<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="${td()}"></div><button class="bg2" onclick="sNom()">+ Registrar nómina</button>`};
 const sFt=(k,el)=>{curFTab=k;document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));el.classList.add('on');['eg','in','ex'].forEach(id=>{const e=document.getElementById('f-'+id);if(e)e.style.display=id===k?'block':'none'})};
-const sM=()=>{const m=parseFloat(document.getElementById('inp-m')?.value||0),f=document.getElementById('inp-f')?.value;if(!m||!f){alert('Monto y fecha');return}const c=document.getElementById('sl-c')?.value||cC;let i=document.getElementById('sl-i')?.value||cI;if(i==='Otra...')i=cI;const cat=CATS[cFam],sub=m/(1+(cat.iv||0)+(cat.ie||0)),p=document.getElementById('inp-p'),ivt=parseFloat(document.getElementById('inp-ivt')?.value||0);D.m.push({id:uid(),t:'egreso',fam:cFam,c,i,monto:m,sub,iv:sub*(cat.iv||0),ie:sub*(cat.ie||0),ivTicket:ivt,f,rec:cR&&!!cat.rec,frec:cR?cFr:null});if(cR&&cat.rec){const ex=D.rc.find(r=>r.fam===cFam&&r.c===c);const pr=nf(f,cFr);if(ex){ex.ult=f;ex.prox=pr;ex.monto=m}else D.rc.push({id:uid(),fam:cFam,c,i,monto:m,frec:cFr,ult:f,prox:pr,act:1})}sv();tblP=0;rAll()};
-const sNom=()=>{const n=parseFloat(document.getElementById('n-n')?.value||0),v=parseFloat(document.getElementById('n-v')?.value||0),f=document.getElementById('n-f')?.value;if(!n||!f)return;const isr=cNQ==='Q2'?parseFloat(document.getElementById('n-isr')?.value||0):0,imss=cNQ==='Q2'?parseFloat(document.getElementById('n-imss')?.value||0):0,fa=cNQ==='Q2'?parseFloat(document.getElementById('n-fa')?.value||0):0,sa=cNQ==='Q2'?parseFloat(document.getElementById('n-sa')?.value||0):0;D.m.push({id:uid(),t:'ingreso',fam:'NOMINA',c:cNQ==='Q1'?'Nómina Quincena 1':'Nómina Quincena 2',i:'Nómina',monto:n+v,neto:n,vales:v,bruto:n+v+isr+imss+fa+sa,deds:cNQ==='Q2'?{isr,imss,fa,sa}:null,f});sv();tblP=0;rAll()};
+const sM=()=>{const m=parseFloat(document.getElementById('inp-m')?.value||0),f=document.getElementById('inp-f')?.value;if(!m||!f){alert('Monto y fecha');return}const c=document.getElementById('sl-c')?.value||cC;let i=document.getElementById('sl-i')?.value||cI;if(i==='Otra...')i=cI;const cat=allCats()[cFam]||CATS[cFam]||{iv:0,ie:0},sub=m/(1+(cat.iv||0)+(cat.ie||0)),p=document.getElementById('inp-p'),ivt=parseFloat(document.getElementById('inp-ivt')?.value||0);D.m.push({id:uid(),t:'egreso',fam:cFam,c,i,monto:m,sub,iv:sub*(cat.iv||0),ie:sub*(cat.ie||0),ivTicket:ivt,f,rec:cR&&!!cat.rec,frec:cR?cFr:null});if(cR&&cat.rec){const ex=D.rc.find(r=>r.fam===cFam&&r.c===c);const pr=nf(f,cFr);if(ex){ex.ult=f;ex.prox=pr;ex.monto=m}else D.rc.push({id:uid(),fam:cFam,c,i,monto:m,frec:cFr,ult:f,prox:pr,act:1})}sv();tblP=0;rAll()};
+const sNom=()=>{const n=parseFloat(document.getElementById('n-n')?.value||0),v=parseFloat(document.getElementById('n-v')?.value||0),f=document.getElementById('n-f')?.value;if(!n||!f)return;const cfg=D.nomCfg||{regimen:'IMSS',segVida:false};const isr=cNQ==='Q2'?parseFloat(document.getElementById('n-isr')?.value||0):0,cuotaSS=cNQ==='Q2'?parseFloat(document.getElementById('n-imss')?.value||0):0,fa=cNQ==='Q2'?parseFloat(document.getElementById('n-fa')?.value||0):0,sa=cNQ==='Q2'?parseFloat(document.getElementById('n-sa')?.value||0):0,svida=cNQ==='Q2'&&cfg.segVida?parseFloat(document.getElementById('n-sv')?.value||0):0;D.m.push({id:uid(),t:'ingreso',fam:'NOMINA',c:cNQ==='Q1'?'Nómina Quincena 1':'Nómina Quincena 2',i:'Nómina',monto:n+v,neto:n,vales:v,bruto:n+v+isr+cuotaSS+fa+sa+svida,deds:cNQ==='Q2'?{isr,imss:cuotaSS,fa,sa,segVida:svida,regimen:cfg.regimen}:null,f});sv();tblP=0;rAll()};
 const sEx=()=>{const m=parseFloat(document.getElementById('ex-m')?.value||0),f=document.getElementById('ex-f')?.value;if(!m||!f)return;D.m.push({id:uid(),t:'ingreso',fam:'EXTRA',c:document.getElementById('ex-c')?.value||'Otro',i:'Efectivo',monto:m,f});sv();tblP=0;rAll()};
 const delM=id=>{D.m=D.m.filter(m=>m.id!==id);sv();rAll()};
-const rT=()=>{const cs=document.getElementById('fil-c');if(cs){const c=cs.value;cs.innerHTML='<option value="">Todas</option>'+Object.entries(CATS).map(([k,v])=>`<option value="${k}"${k===c?' selected':''}>${v.n}</option>`).join('')}const cf2=document.getElementById('fil-c')?.value||'';let mv=gmp().filter(m=>cf2?m.fam===cf2:true).sort((a,b)=>b.f.localeCompare(a.f));const byF={};mv.filter(m=>m.t==='egreso').forEach(m=>{byF[m.f]=(byF[m.f]||0)+m.monto});const cd=Object.entries(byF).sort(([a],[b])=>a.localeCompare(b)).slice(-12);const mx=Math.max(...cd.map(([,v])=>v),1);const bc=document.getElementById('bch');if(bc)bc.innerHTML=cd.map(([,v])=>`<div style="height:${Math.round(v/mx*100)}%"></div>`).join('');const total=mv.length,pages=Math.ceil(total/PG);if(tblP>=pages)tblP=Math.max(0,pages-1);const slice=mv.slice(tblP*PG,(tblP+1)*PG);const tb=document.getElementById('tb');if(!tb)return;if(!total){tb.innerHTML='<tr><td colspan="4" class="empty">Sin registros</td></tr>';const pg=document.getElementById('pag');if(pg)pg.innerHTML='';return}const RC={N:'b-bl',D:'b-am',A:'b-gr','':'b-gy'};tb.innerHTML=slice.map(m=>{const ei=m.t==='ingreso';const rl=CATS[m.fam]?.r||'';return`<tr><td style="color:var(--t3);font-size:10px">${m.f.slice(5).replace('-','/')}</td><td><div style="font-weight:500">${m.c}${m.rec?'<span class="badge b-bl">↻</span>':''}${rl?` <span class="badge ${RC[rl]}">${rl==='N'?'50':rl==='D'?'30':'20'}%</span>`:''}</div><div style="font-size:9px;color:var(--t3)">${CATS[m.fam]?.n||m.fam}</div></td><td style="text-align:right;font-variant-numeric:tabular-nums;color:${ei?'var(--green)':'var(--t1)'};font-weight:600">${ei?'+':'-'}$${fm(m.monto)}</td><td><button class="bre bsm" onclick="delM('${m.id}')">✕</button></td></tr>`}).join('');const pg=document.getElementById('pag');if(pg&&pages>1){pg.innerHTML=`<button ${tblP===0?'disabled':''} onclick="tblP=0;rT()">«</button><button ${tblP===0?'disabled':''} onclick="tblP--;rT()">‹</button><span>${tblP+1}/${pages}</span><button ${tblP>=pages-1?'disabled':''} onclick="tblP++;rT()">›</button><button ${tblP>=pages-1?'disabled':''} onclick="tblP=${pages-1};rT()">»</button>`}else if(pg)pg.innerHTML=''};
+const rT=()=>{const cs=document.getElementById('fil-c');const ac2=allCats();if(cs){const c=cs.value;cs.innerHTML='<option value="">Todas</option>'+Object.entries(ac2).map(([k,v])=>`<option value="${k}"${k===c?' selected':''}>${v.n}</option>`).join('')}const cf2=document.getElementById('fil-c')?.value||'';let mv=gmp().filter(m=>cf2?m.fam===cf2:true).sort((a,b)=>b.f.localeCompare(a.f));const byF={};mv.filter(m=>m.t==='egreso').forEach(m=>{byF[m.f]=(byF[m.f]||0)+m.monto});const cd=Object.entries(byF).sort(([a],[b])=>a.localeCompare(b)).slice(-12);const mx=Math.max(...cd.map(([,v])=>v),1);const bc=document.getElementById('bch');if(bc)bc.innerHTML=cd.map(([,v])=>`<div style="height:${Math.round(v/mx*100)}%"></div>`).join('');const total=mv.length,pages=Math.ceil(total/PG);if(tblP>=pages)tblP=Math.max(0,pages-1);const slice=mv.slice(tblP*PG,(tblP+1)*PG);const tb=document.getElementById('tb');if(!tb)return;if(!total){tb.innerHTML='<tr><td colspan="4" class="empty">Sin registros</td></tr>';const pg=document.getElementById('pag');if(pg)pg.innerHTML='';return}const RC={N:'b-bl',D:'b-am',A:'b-gr','':'b-gy'};tb.innerHTML=slice.map(m=>{const ei=m.t==='ingreso';const rl=ac2[m.fam]?.r||'';return`<tr><td style="color:var(--t3);font-size:10px">${m.f.slice(5).replace('-','/')}</td><td><div style="font-weight:500">${m.c}${m.rec?'<span class="badge b-bl">↻</span>':''}${rl?` <span class="badge ${RC[rl]}">${rl==='N'?'50':rl==='D'?'30':'20'}%</span>`:''}</div><div style="font-size:9px;color:var(--t3)">${ac2[m.fam]?.n||m.fam}</div></td><td style="text-align:right;font-variant-numeric:tabular-nums;color:${ei?'var(--green)':'var(--t1)'};font-weight:600">${ei?'+':'-'}$${fm(m.monto)}</td><td><button class="bre bsm" onclick="delM('${m.id}')">✕</button></td></tr>`}).join('');const pg=document.getElementById('pag');if(pg&&pages>1){pg.innerHTML=`<button ${tblP===0?'disabled':''} onclick="tblP=0;rT()">«</button><button ${tblP===0?'disabled':''} onclick="tblP--;rT()">‹</button><span>${tblP+1}/${pages}</span><button ${tblP>=pages-1?'disabled':''} onclick="tblP++;rT()">›</button><button ${tblP>=pages-1?'disabled':''} onclick="tblP=${pages-1};rT()">»</button>`}else if(pg)pg.innerHTML=''};
 
 // ═══ AHORROS ══════════════════════════════════════════════════════════════════
 const rAh=()=>{document.getElementById('p-a').innerHTML=`<div class="pnl"><h3>Nueva cuenta</h3><div class="fg2"><div class="fld"><label>Institución</label><select id="ah-p">${ahO().map(o=>`<option>${o}</option>`).join('')}</select></div><div class="fld"><label>Saldo ($)</label><input id="ah-s" type="number" step="0.01"></div><div class="fld"><label>Tasa (%)</label><input id="ah-t" type="number" step="0.01"></div><div class="fld"><label>Notas</label><input id="ah-no"></div></div><button class="bg2" style="margin-top:4px" onclick="sAh()">+ Agregar</button><div class="add-r"><input id="ah-new" placeholder="Nueva institución..."><button class="bge bsm" onclick="D.cAh.push(document.getElementById('ah-new').value.trim());sv();rAh()">+</button></div></div><div class="cg">${D.ah.map(a=>{const mx=Math.max(...(a.h||[]).map(x=>x.s),1);const brs=(a.h||[]).slice(-5).map(h=>`<div style="height:${Math.max(Math.round(h.s/mx*100),10)}%;background:#4ade80"></div>`).join('');return`<div class="crd"><div class="crd-h"><div><div class="crd-t">${a.n}</div>${a.t>0?`<span class="badge b-gr">${a.t}%</span>`:''}</div><button class="bre bsm" onclick="dAh('${a.id}')">✕</button></div><div class="crd-v" style="color:var(--green)">$${fm(a.s)}</div><div class="spk">${brs}</div><div class="crd-f"><input id="ua-${a.id}" type="number" step="0.01" placeholder="Saldo"><button class="bge bsm" onclick="uAh('${a.id}')">✓</button></div></div>`}).join('')||'<div class="empty">Sin cuentas.</div>'}</div>`};
@@ -283,7 +312,8 @@ const uDe=id=>{const e=document.getElementById('ud-'+id);if(!e)return;const ns=p
 const dDe=id=>{D.de=D.de.filter(x=>x.id!==id);sv();rDe();rAll()};
 
 // ═══ RECURRENTES ══════════════════════════════════════════════════════════════
-const rRec=()=>{const ac=D.rc.filter(r=>r.act).sort((a,b)=>(a.prox||'z').localeCompare(b.prox||'z'));document.getElementById('p-r').innerHTML=`<div class="pnl"><h3>Recurrentes</h3><p style="font-size:10px;color:var(--t3);margin-bottom:6px">${ac.length} activos · $${fm(ac.reduce((s,r)=>s+r.monto,0))}</p><div class="cg">${ac.map(r=>{const dd=df(r.prox),v=dd!==null&&dd<0,u=dd!==null&&dd<=3&&dd>=0,p=dd!==null&&dd<=7&&dd>=0;return`<div class="crd"><div class="crd-h"><div><div class="crd-t">${r.c}</div><div style="font-size:9px;color:var(--t3)">${CATS[r.fam]?.n||r.fam} · ${FR[r.frec]?.l||r.frec}</div></div><button class="bre bsm" onclick="D.rc=D.rc.filter(x=>x.id!=='${r.id}');sv();rAll()">✕</button></div><div class="crd-v">$${fm(r.monto)}</div><div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:10px;font-weight:500;color:${v?'var(--red)':u?'var(--amber)':p?'var(--blue)':'var(--t1)'}">${fDate(r.prox)}</div><span class="badge ${v?'b-re':u?'b-am':p?'b-bl':'b-gy'}">${dd===null?'':v?Math.abs(dd)+'d atrás':dd===0?'Hoy':dd+'d'}</span></div></div>`}).join('')||'<div class="empty">Sin recurrentes.</div>'}</div></div>`};
+const rRec=()=>{const ac=D.rc.filter(r=>r.act).sort((a,b)=>(a.prox||'z').localeCompare(b.prox||'z'));const frOpts=Object.entries(FR).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('');document.getElementById('p-r').innerHTML=`<div class="pnl"><h3>Recurrentes</h3><p style="font-size:10px;color:var(--t3);margin-bottom:6px">${ac.length} activos · $${fm(ac.reduce((s,r)=>s+r.monto,0))}/periodo</p><div class="cg">${ac.map(r=>{const dd=df(r.prox),v=dd!==null&&dd<0,u=dd!==null&&dd<=3&&dd>=0,p=dd!==null&&dd<=7&&dd>=0;return`<div class="crd"><div class="crd-h"><div><div class="crd-t">${r.c}</div><div style="font-size:9px;color:var(--t3)">${CATS[r.fam]?.n||r.fam}</div></div><button class="bre bsm" onclick="D.rc=D.rc.filter(x=>x.id!=='${r.id}');sv();rAll()">✕</button></div><div class="crd-v">$${fm(r.monto)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div style="font-size:10px;font-weight:500;color:${v?'var(--red)':u?'var(--amber)':p?'var(--blue)':'var(--t1)'}">${fDate(r.prox)}</div><span class="badge ${v?'b-re':u?'b-am':p?'b-bl':'b-gy'}">${dd===null?'':v?Math.abs(dd)+'d atrás':dd===0?'Hoy':dd+'d'}</span></div><div class="crd-f" style="flex-wrap:wrap;gap:4px"><input id="ur-${r.id}" type="number" step="0.01" placeholder="Nuevo monto" style="min-width:70px"><select id="ufr-${r.id}" style="width:auto;min-width:60px;padding:4px 5px;font-size:10px">${Object.entries(FR).map(([k,v2])=>`<option value="${k}"${r.frec===k?' selected':''}>${v2.l}</option>`).join('')}</select><button class="bge bsm" onclick="uRec('${r.id}')">✓ Guardar</button></div></div>`}).join('')||'<div class="empty">Sin recurrentes.</div>'}</div></div>`};
+const uRec=id=>{const r=D.rc.find(x=>x.id===id);if(!r)return;const mEl=document.getElementById('ur-'+id),fEl=document.getElementById('ufr-'+id);const nm=parseFloat(mEl?.value);const nfr=fEl?.value;if(!isNaN(nm)&&nm>0)r.monto=nm;if(nfr&&FR[nfr]){r.frec=nfr;if(r.ult)r.prox=nf(r.ult,nfr)}sv();rRec();rAll()};
 
 // ═══ FUTUROS ══════════════════════════════════════════════════════════════════
 const rFut=()=>{const lastI=D.m.filter(m=>m.t==='ingreso').slice(-1)[0],ingM=lastI?lastI.monto:0;const r=calcR(),gF=r.gN+r.gD+r.gA,libre=ingM-gF;document.getElementById('p-f').innerHTML=`<div class="pnl"><h3>Simulador</h3><p style="font-size:10px;color:var(--t3);margin-bottom:5px">Ingreso: $${fm(ingM)} · Gastos: $${fm(gF)} · Sobrante: <b>$${fm(libre)}</b></p><div class="fg2"><div class="fld"><label>¿Qué?</label><input id="ft-d" placeholder="Celular..."></div><div class="fld"><label>Costo ($)</label><input id="ft-c" type="number" step="0.01"></div></div><div class="fg3"><div class="fld"><label>MSI</label><input id="ft-m" type="number" min="1" value="12"></div><div class="fld"><label>Enganche</label><input id="ft-e" type="number" step="0.01" value="0"></div><div class="fld"><label>Ingreso</label><input id="ft-i" type="number" step="0.01" value="${ingM.toFixed(2)}"></div></div><div class="fg2" style="margin-top:4px"><button class="bbl" onclick="cFut('c')">Contado</button><button class="bam" onclick="cFut('m')">MSI</button></div><div id="ft-r"></div></div>${D.fut?.length?`<div class="cg">${D.fut.map(f=>`<div class="crd"><div class="crd-h"><div class="crd-t">${f.d}</div><button class="bre bsm" onclick="D.fut=D.fut.filter(x=>x.id!=='${f.id}');sv();rFut()">✕</button></div><div class="crd-v" style="color:${f.ok?'var(--green)':'var(--red)'}">$${fm(f.c)}</div><div class="crd-r"><span>${f.t==='c'?'Contado':f.ms+'MSI'}</span><span class="badge ${f.ok?'b-gr':'b-re'}">${f.ok?'✅':'❌'}</span></div></div>`).join('')}</div>`:''}`};
@@ -399,10 +429,264 @@ if(!D.xferLog)D.xferLog=[];D.xferLog.push({id:uid(),f:td(),from:fromName,to:toNa
 sv();rDb();rAll()};
 
 
+// ═══ CONFIGURACIÓN ════════════════════════════════════════════════════════════
+// D.cfgCats = [{id,key,name,iva,ieps,rule,concepts:[str]}]
+const initCfg=()=>{['cfgCats','cInst','cfgTaxes','cfgExtraConcepts'].forEach(k=>{if(!D[k])D[k]=[]})};
+const getCat=k=>allCats()[k]||CATS[k]||{n:k,iv:0,ie:0,r:'',c:[]};
+
+const rCfg=()=>{initCfg();
+const ruOpt=`<option value="">Sin regla</option><option value="N">50% Necesidades</option><option value="D">30% Deseos</option><option value="A">20% Ahorro</option>`;
+
+document.getElementById('p-cfg').innerHTML=`
+<div class="pnl"><h3>⚙ Configuración del sistema</h3>
+<p style="font-size:10px;color:var(--t3);margin-bottom:8px">Crea categorías, conceptos, instituciones e impuestos personalizados para registrar gastos que no están en el catálogo predeterminado.</p></div>
+
+<!-- CATEGORÍAS PERSONALIZADAS -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">📂 Categorías de gasto personalizadas</h3>
+<p style="font-size:9px;color:var(--t3);margin-bottom:6px">Agrega familias de gasto nuevas con sus impuestos y regla 50-30-20.</p>
+<div class="fg2"><div class="fld"><label>Clave (sin espacios)</label><input id="cfg-ck" placeholder="MASCOTAS"></div><div class="fld"><label>Nombre</label><input id="cfg-cn" placeholder="Mascotas y Veterinario"></div></div>
+<div class="fg4"><div class="fld"><label>IVA (%)</label><input id="cfg-cv" type="number" step="0.01" value="16" placeholder="16"></div><div class="fld"><label>IEPS (%)</label><input id="cfg-ce" type="number" step="0.01" value="0"></div><div class="fld"><label>Regla 50-30-20</label><select id="cfg-cr">${ruOpt}</select></div><div class="fld"><label>¿Recurrente?</label><select id="cfg-cc"><option value="0">No</option><option value="1">Sí</option></select></div></div>
+<div class="fld"><label>Conceptos (separados por coma)</label><input id="cfg-co" placeholder="Alimento mascota, Veterinario, Vacunas, Estética"></div>
+<button class="bp" style="margin-top:4px" onclick="addCfgCat()">+ Agregar categoría</button>
+
+${D.cfgCats.length?`<div class="tbl" style="margin-top:8px"><table><thead><tr><th>Clave</th><th>Nombre</th><th>IVA</th><th>IEPS</th><th>Regla</th><th>Conceptos</th><th></th></tr></thead><tbody>${D.cfgCats.map(c=>`<tr><td style="font-weight:600">${c.key}</td><td>${c.name}</td><td>${(c.iva*100).toFixed(0)}%</td><td>${(c.ieps*100).toFixed(0)}%</td><td><span class="badge ${c.rule==='N'?'b-bl':c.rule==='D'?'b-am':c.rule==='A'?'b-gr':'b-gy'}">${c.rule||'—'}</span></td><td style="font-size:9px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${(c.concepts||[]).join(', ')}</td><td><button class="bre bsm" onclick="D.cfgCats=D.cfgCats.filter(x=>x.id!=='${c.id}');sv();rCfg()">✕</button></td></tr>`).join('')}</tbody></table></div>`:''}</div>
+
+<!-- CONCEPTOS EXTRA A CATEGORÍAS EXISTENTES -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">📝 Agregar conceptos a categorías existentes</h3>
+<div class="fg3"><div class="fld"><label>Categoría</label><select id="cfg-ec">${Object.entries(allCats()).filter(([k])=>!['NOMINA','EXTRA'].includes(k)).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join('')}</select></div><div class="fld"><label>Nuevo concepto</label><input id="cfg-en" placeholder="Ej: Seguro dental"></div><div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl" onclick="addCfgConc()">+ Agregar</button></div></div>
+${D.cfgExtraConcepts?.length?`<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${D.cfgExtraConcepts.map((ec,i)=>`<span class="badge b-bl">${ec.cat}: ${ec.name} <button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 3px" onclick="D.cfgExtraConcepts.splice(${i},1);sv();rCfg()">✕</button></span>`).join('')}</div>`:''}</div>
+
+<!-- INSTITUCIONES -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">🏦 Instituciones / bancos personalizados</h3>
+<p style="font-size:9px;color:var(--t3);margin-bottom:5px">Estas aparecen en el select de Institución al registrar gastos, y en bancos de débito.</p>
+<div class="fg2"><div class="fld"><label>Nombre</label><input id="cfg-in" placeholder="Ej: Banamex, HSBC, BanCoppel..."></div><div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl" onclick="const v=document.getElementById('cfg-in').value.trim();if(v){D.cInst.push(v);sv();rCfg()}">+ Agregar</button></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${['BBVA','Mercado Pago','Nu','Santander','Efectivo'].map(i=>`<span class="badge b-gy">${i}</span>`).join('')}${(D.cInst||[]).map((inst,i)=>`<span class="badge b-bl">${inst} <button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 3px" onclick="D.cInst.splice(${i},1);sv();rCfg()">✕</button></span>`).join('')}</div></div>
+
+<!-- IMPUESTOS / COMISIONES PERSONALIZADAS -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">💰 Impuestos y comisiones personalizadas</h3>
+<p style="font-size:9px;color:var(--t3);margin-bottom:5px">Define impuestos o comisiones que se aplican a categorías específicas.</p>
+<div class="fg3"><div class="fld"><label>Nombre</label><input id="cfg-tn" placeholder="ISH, Propina, Envío..."></div><div class="fld"><label>Porcentaje (%)</label><input id="cfg-tp" type="number" step="0.01" placeholder="3"></div><div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl" onclick="addCfgTax()">+ Agregar</button></div></div>
+${D.cfgTaxes?.length?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${D.cfgTaxes.map((tx,i)=>`<span class="badge b-am">${tx.name} ${tx.pct}% <button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 3px" onclick="D.cfgTaxes.splice(${i},1);sv();rCfg()">✕</button></span>`).join('')}</div>`:''}</div>
+
+<!-- DATOS -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">🗑 Datos</h3>
+<div class="fg2"><button class="bre" onclick="if(confirm('¿Borrar TODOS los datos? Esto no se puede deshacer.')){localStorage.removeItem('f360v12');location.reload()}">Borrar todos los datos</button><button class="bbl" onclick="const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finanzas360_backup.json';a.click()">📥 Exportar JSON</button></div></div>
+`;};
+
+const addCfgCat=()=>{const key=document.getElementById('cfg-ck')?.value?.trim().toUpperCase().replace(/\s/g,'_');const name=document.getElementById('cfg-cn')?.value?.trim();if(!key||!name){alert('Ingresa clave y nombre');return}if(CATS[key]||D.cfgCats.find(c=>c.key===key)){alert('Esa clave ya existe');return}const iva=parseFloat(document.getElementById('cfg-cv')?.value||0)/100;const ieps=parseFloat(document.getElementById('cfg-ce')?.value||0)/100;const rule=document.getElementById('cfg-cr')?.value||'';const rec=document.getElementById('cfg-cc')?.value==='1';const concepts=(document.getElementById('cfg-co')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);D.cfgCats.push({id:uid(),key,name,iva,ieps,rule,rec,concepts});sv();rCfg()};
+
+const addCfgConc=()=>{const cat=document.getElementById('cfg-ec')?.value;const name=document.getElementById('cfg-en')?.value?.trim();if(!cat||!name)return;if(!D.cfgExtraConcepts)D.cfgExtraConcepts=[];D.cfgExtraConcepts.push({cat,name});sv();rCfg()};
+
+const addCfgTax=()=>{const name=document.getElementById('cfg-tn')?.value?.trim();const pct=parseFloat(document.getElementById('cfg-tp')?.value||0);if(!name||!pct)return;D.cfgTaxes.push({name,pct});sv();rCfg()};
+
+// ═══ VEHÍCULOS ════════════════════════════════════════════════════════════════
+const ASEG=['AXA','BBVA Seguros','Qualitas','GNP','HDI','Mapfre','Chubb','Zurich','Inbursa','Banorte Seguros','Ana Seguros','Otra...'];
+const COB=['Responsabilidad civil','Amplia','Limitada','Básica','Todo riesgo'];
+const VTIPOS={auto:'🚗 Auto',moto:'🏍 Moto',electrico:'⚡ Eléctrico',camioneta:'🛻 Camioneta',biciE:'🚲 Bici eléctrica'};
+const LIC_T=['Automovilista','Motociclista','Chofer','Tipo A','Tipo B','Tipo C','Tipo D','Otro'];
+const VPER={anual:'Anual',bianual:'Cada 2 años',trianual:'Cada 3 años',permanente:'Permanente',otro:'Otro'};
+const SPLZ=['Contado','Mensual','Trimestral','Semestral','Anual'];
+
+const vehGastoTotal=()=>(D.vehs||[]).reduce((s,v)=>{
+  return s+(v.licencias||[]).reduce((s2,l)=>s2+l.costo,0)+(v.placas||[]).reduce((s2,p)=>s2+p.costo,0)+(v.tarjCirc||[]).reduce((s2,t)=>s2+t.costo,0)+(v.seguros||[]).reduce((s2,sg)=>s2+sg.costo,0)},0);
+
+const rVeh=()=>{
+if(!D.vehs)D.vehs=[];
+const tG=vehGastoTotal(),tIVA=tG*0.16/1.16;
+const recItems=[];
+(D.vehs||[]).forEach(v=>{const vn=v.nombre||v.marca;
+(v.licencias||[]).filter(l=>l.rec).forEach(l=>recItems.push({n:`🪪 Lic. ${l.tipo} — ${vn}`,m:l.costo,p:l.periodo,fv:l.fVence}));
+(v.placas||[]).filter(p=>p.rec).forEach(p=>recItems.push({n:`🔢 Placas ${p.tipo} — ${vn}`,m:p.costo,p:p.periodo,fv:p.fVence}));
+(v.tarjCirc||[]).filter(t=>t.rec).forEach(t=>recItems.push({n:`📄 Tarj. Circ. — ${vn}`,m:t.costo,p:t.periodo,fv:t.fVence}));
+(v.seguros||[]).forEach(sg=>recItems.push({n:`🛡 ${sg.aseguradora} — ${vn}`,m:sg.costo,p:sg.plazo,fv:sg.fVence}));
+});
+
+document.getElementById('p-v').innerHTML=`
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
+  <div class="sc"><label>Vehículos</label><div class="v">${D.vehs.length}</div></div>
+  <div class="sc neg"><label>Gasto vehicular total</label><div class="v">$${fm(tG)}</div></div>
+  <div class="sc"><label>IVA desglosado</label><div class="v" style="color:var(--amber)">$${fm(tIVA)}</div></div>
+  <div class="sc"><label>Pagos recurrentes</label><div class="v" style="color:var(--blue)">${recItems.length}</div></div>
+</div>
+
+${recItems.length?`<div class="pnl" style="margin-bottom:6px"><h3 style="font-size:11px">📋 Gastos vehiculares recurrentes</h3><div class="tbl"><table><thead><tr><th>Concepto</th><th>Monto</th><th>Periodo</th><th>Vence</th><th>Estado</th></tr></thead><tbody>${recItems.map(ri=>{const dd=df(ri.fv);const venc=dd!==null&&dd<0;const prox=dd!==null&&dd<=30&&dd>=0;return`<tr><td style="font-size:10px;font-weight:500">${ri.n}</td><td style="font-weight:600">$${fm(ri.m)}</td><td><span class="badge b-gy">${ri.p||'—'}</span></td><td style="font-size:10px">${fDate(ri.fv)}</td><td>${venc?'<span class="badge b-re">Vencido</span>':prox?`<span class="badge b-am">${dd}d</span>`:'<span class="badge b-gr">Vigente</span>'}</td></tr>`}).join('')}</tbody></table></div></div>`:''}
+
+<div class="pnl"><h3>Registrar vehículo</h3>
+<div class="fg3">
+  <div class="fld"><label>Tipo</label><select id="vh-tp">${Object.entries(VTIPOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
+  <div class="fld"><label>Marca</label><input id="vh-mk" placeholder="Nissan, Honda, Tesla..."></div>
+  <div class="fld"><label>Nombre / alias</label><input id="vh-nm" placeholder="Mi carro, Moto trabajo..."></div>
+</div>
+<button class="bp" style="margin-top:4px" onclick="addVeh()">+ Registrar vehículo</button>
+</div>
+
+${D.vehs.map(v=>renderVehCard(v)).join('')}
+${!D.vehs.length?'<div class="empty" style="margin-top:6px">Sin vehículos registrados.</div>':''}
+`};
+
+const renderVehCard=v=>{
+const lics=v.licencias||[],plcs=v.placas||[],tcs=v.tarjCirc||[],segs=v.seguros||[];
+const totalV=lics.reduce((s,l)=>s+l.costo,0)+plcs.reduce((s,p)=>s+p.costo,0)+tcs.reduce((s,t)=>s+t.costo,0)+segs.reduce((s,sg)=>s+sg.costo,0);
+const ivaV=totalV*0.16/1.16;
+
+return`<div class="pnl" style="margin-top:6px;border-left:3px solid var(--blue)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div>
+    <div style="display:flex;gap:4px;align-items:center;margin-bottom:2px">
+      <span style="font-size:16px">${VTIPOS[v.tipo]?.split(' ')[0]||'🚗'}</span>
+      <span style="font-size:14px;font-weight:700">${v.nombre||v.marca}</span>
+      <span class="badge b-gy">${VTIPOS[v.tipo]?.split(' ').slice(1).join(' ')||v.tipo}</span>
+    </div>
+    <div style="font-size:10px;color:var(--t3)">${v.marca} · Gasto: <b style="color:var(--red)">$${fm(totalV)}</b> · IVA: <b style="color:var(--amber)">$${fm(ivaV)}</b></div>
+  </div>
+  <button class="bre bsm" onclick="D.vehs=D.vehs.filter(x=>x.id!=='${v.id}');sv();rVeh()">✕</button>
+</div>
+
+<!-- LICENCIAS -->
+<details style="margin-top:8px"><summary style="font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">🪪 Licencias (${lics.length}) · $${fm(lics.reduce((s,l)=>s+l.costo,0))}</summary>
+<div style="margin-top:4px">
+${lics.map((l,i)=>{const dd=df(l.fVence);return`<div style="display:flex;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--brd);font-size:10px;flex-wrap:wrap">
+  <span class="badge b-bl">${l.tipo}</span>
+  <span>${l.titular||''}</span>
+  <span style="font-weight:700">$${fm(l.costo)}</span>
+  <span style="color:var(--t3)">Vence: ${fDate(l.fVence)}</span>
+  ${l.rec?'<span class="badge b-pu">↻ '+l.periodo+'</span>':'<span class="badge b-gy">Único</span>'}
+  ${dd!==null&&dd<0?'<span class="badge b-re">Vencida</span>':dd!==null&&dd<=30?`<span class="badge b-am">${dd}d</span>`:''}
+  <input id="vl-${v.id}-${i}" type="number" step="0.01" placeholder="$" style="width:60px;padding:3px;font-size:10px">
+  <button class="bge bsm" onclick="updVehItem('${v.id}','licencias',${i})">✓</button>
+  <button class="bre bsm" onclick="delVehItem('${v.id}','licencias',${i})">✕</button>
+</div>`}).join('')}
+<div style="margin-top:6px;padding:6px;background:var(--bg);border-radius:7px">
+<div class="fg4">
+  <div class="fld"><label>Tipo</label><select id="vla-tp-${v.id}">${LIC_T.map(t=>`<option>${t}</option>`).join('')}</select></div>
+  <div class="fld"><label>Titular</label><input id="vla-tt-${v.id}" placeholder="Nombre"></div>
+  <div class="fld"><label>Costo ($)</label><input id="vla-co-${v.id}" type="number" step="0.01"></div>
+  <div class="fld"><label>Vence</label><input id="vla-fv-${v.id}" type="date"></div>
+</div>
+<div class="fg3">
+  <div class="tog-r" onclick="document.getElementById('vla-rc-${v.id}').checked=!document.getElementById('vla-rc-${v.id}').checked"><input type="checkbox" id="vla-rc-${v.id}" style="width:auto"> <span style="font-size:10px">Recurrente</span></div>
+  <div class="fld"><label>Periodo</label><select id="vla-pe-${v.id}">${Object.entries(VPER).map(([k,vv])=>`<option value="${k}">${vv}</option>`).join('')}</select></div>
+  <div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl bsm" onclick="addVehLic('${v.id}')">+ Licencia</button></div>
+</div>
+</div></div></details>
+
+<!-- PLACAS -->
+<details style="margin-top:4px"><summary style="font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">🔢 Placas (${plcs.length}) · $${fm(plcs.reduce((s,p)=>s+p.costo,0))}</summary>
+<div style="margin-top:4px">
+${plcs.map((p,i)=>`<div style="display:flex;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--brd);font-size:10px;flex-wrap:wrap">
+  <span class="badge b-am">${p.tipo||'Particular'}</span>
+  <span>${p.estado||''}</span>
+  <span style="font-weight:700">$${fm(p.costo)}</span>
+  <span style="color:var(--t3)">${fDate(p.fPago)}</span>
+  ${p.rec?'<span class="badge b-pu">↻ '+p.periodo+'</span>':'<span class="badge b-gy">Único</span>'}
+  ${p.fVence?venceAlert(p.fVence):''}
+  <input id="vp-${v.id}-${i}" type="number" step="0.01" placeholder="$" style="width:60px;padding:3px;font-size:10px">
+  <button class="bge bsm" onclick="updVehItem('${v.id}','placas',${i})">✓</button>
+  <button class="bre bsm" onclick="delVehItem('${v.id}','placas',${i})">✕</button>
+</div>`).join('')}
+<div style="margin-top:6px;padding:6px;background:var(--bg);border-radius:7px">
+<div class="fg4">
+  <div class="fld"><label>Tipo</label><select id="vpa-tp-${v.id}"><option>Particular</option><option>Comercial</option><option>Moto</option><option>Eléctrico</option><option>Antiguo</option></select></div>
+  <div class="fld"><label>Estado</label><input id="vpa-es-${v.id}" placeholder="Yucatán"></div>
+  <div class="fld"><label>Costo ($)</label><input id="vpa-co-${v.id}" type="number" step="0.01"></div>
+  <div class="fld"><label>Fecha pago</label><input id="vpa-fp-${v.id}" type="date" value="${td()}"></div>
+</div>
+<div class="fg3">
+  <div class="tog-r" onclick="document.getElementById('vpa-rc-${v.id}').checked=!document.getElementById('vpa-rc-${v.id}').checked"><input type="checkbox" id="vpa-rc-${v.id}" style="width:auto"> <span style="font-size:10px">Recurrente</span></div>
+  <div class="fld"><label>Periodo</label><select id="vpa-pe-${v.id}">${Object.entries(VPER).map(([k,vv])=>`<option value="${k}">${vv}</option>`).join('')}</select></div>
+  <div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl bsm" onclick="addVehPlaca('${v.id}')">+ Placa</button></div>
+</div>
+</div></div></details>
+
+<!-- TARJETA CIRCULACIÓN -->
+<details style="margin-top:4px"><summary style="font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">📄 Tarjeta de circulación (${tcs.length}) · $${fm(tcs.reduce((s,t)=>s+t.costo,0))}</summary>
+<div style="margin-top:4px">
+${tcs.map((t2,i)=>{const dd=df(t2.fVence);return`<div style="display:flex;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid var(--brd);font-size:10px;flex-wrap:wrap">
+  <span style="font-weight:700">$${fm(t2.costo)}</span>
+  <span style="color:var(--t3)">Pagado: ${fDate(t2.fPago)} · Vence: ${fDate(t2.fVence)}</span>
+  ${t2.rec?'<span class="badge b-pu">↻ '+t2.periodo+'</span>':'<span class="badge b-gy">Único</span>'}
+  ${venceAlert(t2.fVence)}
+  <input id="vtc-${v.id}-${i}" type="number" step="0.01" placeholder="$" style="width:60px;padding:3px;font-size:10px">
+  <button class="bge bsm" onclick="updVehItem('${v.id}','tarjCirc',${i})">✓</button>
+  <button class="bre bsm" onclick="delVehItem('${v.id}','tarjCirc',${i})">✕</button>
+</div>`}).join('')}
+<div style="margin-top:6px;padding:6px;background:var(--bg);border-radius:7px">
+<div class="fg4">
+  <div class="fld"><label>Costo ($)</label><input id="vtca-co-${v.id}" type="number" step="0.01"></div>
+  <div class="fld"><label>Fecha pago</label><input id="vtca-fp-${v.id}" type="date" value="${td()}"></div>
+  <div class="fld"><label>Vence</label><input id="vtca-fv-${v.id}" type="date"></div>
+  <div class="fld"><label>Periodo</label><select id="vtca-pe-${v.id}">${Object.entries(VPER).map(([k,vv])=>`<option value="${k}">${vv}</option>`).join('')}</select></div>
+</div>
+<div class="fg2">
+  <div class="tog-r" onclick="document.getElementById('vtca-rc-${v.id}').checked=!document.getElementById('vtca-rc-${v.id}').checked"><input type="checkbox" id="vtca-rc-${v.id}" style="width:auto" checked> <span style="font-size:10px">Recurrente</span></div>
+  <div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl bsm" onclick="addVehTC('${v.id}')">+ Tarjeta circulación</button></div>
+</div>
+</div></div></details>
+
+<!-- SEGUROS -->
+<details style="margin-top:4px" open><summary style="font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">🛡 Seguros (${segs.length}) · $${fm(segs.reduce((s,sg)=>s+sg.costo,0))}</summary>
+<div style="margin-top:4px">
+${segs.map((sg,i)=>{
+  const diasV=df(sg.fVence);const venc=diasV!==null&&diasV<0;const prox=diasV!==null&&diasV<=30&&diasV>=0;
+  const ivaEst=sg.costo*0.16/1.16;
+  return`<div class="crd" style="margin-bottom:4px;${venc?'border-color:#fca5a5;background:#fef2f2':prox?'border-color:#fde68a;background:#fffbeb':''}">
+  <div class="crd-h"><div>
+    <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:2px">
+      <span class="badge b-pu">${sg.aseguradora}</span>
+      <span class="badge b-bl">${sg.tipoCobertura||'Amplia'}</span>
+      <span class="badge b-gy">${sg.plazo}</span>
+      ${venc?'<span class="badge b-re">⚠ VENCIDO</span>':prox?`<span class="badge b-am">⏰ ${diasV}d para vencer</span>`:'<span class="badge b-gr">Vigente</span>'}
+    </div>
+    <div style="font-size:10px;color:var(--t3)">Póliza: ${sg.poliza||'—'} · Pagado: ${fDate(sg.fPago)} · Vence: ${fDate(sg.fVence)}</div>
+  </div>
+  <button class="bre bsm" onclick="delVehItem('${v.id}','seguros',${i})">✕</button></div>
+  <div style="display:flex;gap:8px;align-items:baseline;margin:4px 0">
+    <span style="font-size:18px;font-weight:700;color:var(--red)">$${fm(sg.costo)}</span>
+    <span style="font-size:10px;color:var(--amber)">IVA: $${fm(ivaEst)}</span>
+    <span style="font-size:10px;color:var(--t3)">Neto: $${fm(sg.costo-ivaEst)}</span>
+  </div>
+  <div class="crd-f"><input id="vs-${v.id}-${i}" type="number" step="0.01" placeholder="Actualizar costo"><button class="bge bsm" onclick="updVehItem('${v.id}','seguros',${i})">✓</button></div>
+</div>`}).join('')}
+<div style="margin-top:6px;padding:8px;background:var(--bg);border-radius:7px">
+<div class="fg2">
+  <div class="fld"><label>Aseguradora</label><select id="vsa-as-${v.id}">${ASEG.map(a=>`<option>${a}</option>`).join('')}</select></div>
+  <div class="fld"><label>Cobertura</label><select id="vsa-cb-${v.id}">${COB.map(c=>`<option>${c}</option>`).join('')}</select></div>
+</div>
+<div class="fg4" style="margin-top:3px">
+  <div class="fld"><label>Costo total ($)</label><input id="vsa-co-${v.id}" type="number" step="0.01"></div>
+  <div class="fld"><label>Plazo de pago</label><select id="vsa-pl-${v.id}">${SPLZ.map(p=>`<option>${p}</option>`).join('')}</select></div>
+  <div class="fld"><label>Fecha que se pagó</label><input id="vsa-fp-${v.id}" type="date" value="${td()}"></div>
+  <div class="fld"><label>Fecha que vence</label><input id="vsa-fv-${v.id}" type="date"></div>
+</div>
+<div class="fg2" style="margin-top:3px">
+  <div class="fld"><label>No. póliza</label><input id="vsa-po-${v.id}" placeholder="Opcional"></div>
+  <div class="fld"><label>Notas</label><input id="vsa-no-${v.id}" placeholder="Deducible, etc."></div>
+</div>
+<button class="bbl bsm" style="margin-top:4px" onclick="addVehSeg('${v.id}')">+ Agregar seguro</button>
+</div></div></details>
+</div>`;
+};
+
+const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d2<0)return'<span class="badge b-re">Vencido</span>';if(d2<=30)return`<span class="badge b-am">${d2}d</span>`;return''};
+
+const addVeh=()=>{const tp=document.getElementById('vh-tp')?.value||'auto',mk=document.getElementById('vh-mk')?.value?.trim()||'',nm=document.getElementById('vh-nm')?.value?.trim()||'';if(!mk){alert('Ingresa la marca');return}D.vehs.push({id:uid(),nombre:nm||mk,tipo:tp,marca:mk,licencias:[],placas:[],tarjCirc:[],seguros:[]});sv();rVeh()};
+
+const addVehLic=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vla-tp-'+vid)?.value||'Automovilista',tt=document.getElementById('vla-tt-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vla-co-'+vid)?.value||0),fv=document.getElementById('vla-fv-'+vid)?.value||'',rc=document.getElementById('vla-rc-'+vid)?.checked||false,pe=document.getElementById('vla-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.licencias.push({id:uid(),tipo:tp,titular:tt,costo:co,fPago:td(),fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
+
+const addVehPlaca=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vpa-tp-'+vid)?.value||'Particular',es=document.getElementById('vpa-es-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vpa-co-'+vid)?.value||0),fp=document.getElementById('vpa-fp-'+vid)?.value||td(),rc=document.getElementById('vpa-rc-'+vid)?.checked||false,pe=document.getElementById('vpa-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.placas.push({id:uid(),tipo:tp,estado:es,costo:co,fPago:fp,rec:rc,periodo:pe});sv();rVeh()};
+
+const addVehTC=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const co=parseFloat(document.getElementById('vtca-co-'+vid)?.value||0),fp=document.getElementById('vtca-fp-'+vid)?.value||td(),fv=document.getElementById('vtca-fv-'+vid)?.value||'',rc=document.getElementById('vtca-rc-'+vid)?.checked!==false,pe=document.getElementById('vtca-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.tarjCirc.push({id:uid(),costo:co,fPago:fp,fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
+
+const addVehSeg=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;let aseg=document.getElementById('vsa-as-'+vid)?.value||'';if(aseg==='Otra...'){aseg=prompt('Nombre de la aseguradora:');if(!aseg)return}const cb=document.getElementById('vsa-cb-'+vid)?.value||'Amplia',co=parseFloat(document.getElementById('vsa-co-'+vid)?.value||0),pl=document.getElementById('vsa-pl-'+vid)?.value||'Anual',fp=document.getElementById('vsa-fp-'+vid)?.value||td(),fv=document.getElementById('vsa-fv-'+vid)?.value||'',po=document.getElementById('vsa-po-'+vid)?.value?.trim()||'',no=document.getElementById('vsa-no-'+vid)?.value?.trim()||'';if(!co){alert('Ingresa costo');return}v.seguros.push({id:uid(),aseguradora:aseg,tipoCobertura:cb,costo:co,plazo:pl,fPago:fp,fVence:fv,poliza:po,notas:no});sv();rVeh()};
+
+const updVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr]||!v[arr][idx])return;const prefixes={licencias:'vl',placas:'vp',tarjCirc:'vtc',seguros:'vs'};const el=document.getElementById(prefixes[arr]+'-'+vid+'-'+idx);if(!el)return;const ns=parseFloat(el.value);if(isNaN(ns)||ns<=0){alert('Ingresa monto válido');return}v[arr][idx].costo=ns;sv();rVeh()};
+
+const delVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr])return;v[arr].splice(idx,1);sv();rVeh()};
+
 // ═══ NAV ══════════════════════════════════════════════════════════════════════
-const ST=(t,el)=>{ct=t;['g','a','d','r','f','p','b'].forEach(k=>{const e=document.getElementById('p-'+k);if(e)e.classList.toggle('vis',k===t)});document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));if(el)el.classList.add('on');if(t==='g')rG();if(t==='a')rAh();if(t==='d')rDe();if(t==='r')rRec();if(t==='f')rFut();if(t==='p')rPr();if(t==='b')rDb()};
+const ST=(t,el)=>{ct=t;['g','a','d','r','f','p','b','v','cfg'].forEach(k=>{const e=document.getElementById('p-'+k);if(e)e.classList.toggle('vis',k===t)});document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));if(el)el.classList.add('on');if(t==='g')rG();if(t==='a')rAh();if(t==='d')rDe();if(t==='r')rRec();if(t==='f')rFut();if(t==='p')rPr();if(t==='b')rDb();if(t==='v')rVeh();if(t==='cfg')rCfg()};
 const setP=(p,el)=>{cp=p;tblP=0;document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));el.classList.add('on');rAll()};
-const rAll=()=>{rSum();rRule();rAlerts();rDonuts();rWA();if(ct==='g')rG();if(ct==='a')rAh();if(ct==='d')rDe();if(ct==='r')rRec();if(ct==='f')rFut();if(ct==='p')rPr();if(ct==='b')rDb()};
+const rAll=()=>{rSum();rRule();rAlerts();rDonuts();rWA();if(ct==='g')rG();if(ct==='a')rAh();if(ct==='d')rDe();if(ct==='r')rRec();if(ct==='f')rFut();if(ct==='p')rPr();if(ct==='b')rDb();if(ct==='v')rVeh();if(ct==='cfg')rCfg()};
 rAll();
 </script>
 </body>
