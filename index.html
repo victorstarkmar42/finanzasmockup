@@ -290,11 +290,25 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const CIBER_TIPS = [
-    "<b>Phishing (Correos Falsos):</b> Nunca hagas clic en enlaces de correos que dicen 'Tu cuenta ha sido bloqueada'. Entra siempre directo a la app oficial de tu banco.",
-    "<b>Vishing (Llamadas Falsas):</b> Si te llaman del banco pidiendo tu NIP o código SMS para 'cancelar un cargo retenido', ¡cuelga! Es fraude. Los bancos nunca piden códigos por llamada.",
-    "<b>Montadeudas:</b> Evita apps de préstamos rápidos que no estén reguladas (SIPRES). Hackean tus contactos, galería y te extorsionan. Usa solo instituciones confiables.",
-    "<b>Carding:</b> Usa tarjetas digitales con CVV dinámico para compras en línea. Nunca uses tu tarjeta física en sitios dudosos o no verificados.",
-    "<b>Ingeniería Social (WhatsApp):</b> Nadie te regalará dinero o premios por WhatsApp a cambio de un depósito previo. Tampoco des dinero a familiares que escriben pidiendo ayuda urgente de números desconocidos sin llamarlos primero."
+    "<b>Phishing (Aprox. 36% de los ataques globales):</b> Correos falsos suplantando identidad. Nunca hagas clic en enlaces que dicen 'Tu cuenta ha sido bloqueada'. Entra siempre directo a la app oficial.",
+    "<b>Ransomware / Secuestro de datos (24%):</b> Mantén copias de seguridad de tus documentos importantes. Nunca descargues archivos adjuntos (ZIP, PDF, EXE) de remitentes dudosos.",
+    "<b>Robo de Credenciales y Contraseñas (18%):</b> Usa contraseñas únicas y largas para tus apps financieras y activa siempre la autenticación de dos pasos (2FA).",
+    "<b>Ingeniería Social y Vishing (11%):</b> Si te llaman del banco pidiendo tu NIP o código SMS, ¡cuelga! Es fraude. Los bancos nunca solicitan esos códigos en llamadas entrantes.",
+    "<b>Malware y Troyanos Bancarios (7%):</b> Descarga aplicaciones financieras únicamente desde las tiendas oficiales (Google Play, App Store) y no aceptes instalar APKs desconocidas.",
+    "<b>Man-in-the-Middle (Ataques en redes Wi-Fi públicas) (4%):</b> Nunca abras la app de tu banco ni realices compras online conectado a redes Wi-Fi públicas o de hoteles sin usar una VPN.",
+    "<b>Montadeudas (Ataque emergente en LATAM):</b> Evita apps de préstamos rápidos no reguladas (SIPRES). Hackean tu libreta de contactos y galería para extorsionarte.",
+    "<b>Carding (Fraude con tarjetas clonadas):</b> Usa tarjetas digitales con CVV dinámico que expira en 5 minutos para compras en línea. Nunca uses tu tarjeta física en sitios web dudosos.",
+    "<b>Estafas en WhatsApp (Secuestro de cuentas):</b> Nadie te regalará dinero por WhatsApp. Si un familiar te pide una transferencia urgente desde un número nuevo, llámale por teléfono para verificar."
+];
+
+// NUEVO: Catálogo de amenazas activas de máxima prioridad
+const ACTIVE_THREATS = [
+    { 
+        id: 'janelarat', 
+        title: 'NUEVA AMENAZA LATAM: Virus JanelaRAT', 
+        desc: 'Trojano bancario activo enfocado en usuarios de Latinoamérica. Se oculta en archivos ZIP/PDF falsos (supuestas facturas) y roba credenciales bancarias tomando control de tu pantalla. <b>No descargues ni abras comprobantes fiscales de correos desconocidos.</b>', 
+        severity: 'CRÍTICA' 
+    }
 ];
 
 const toggleTheme = () => {
@@ -1621,7 +1635,23 @@ const rAll=()=>{
   
   const ciberEl = document.getElementById('ciber-tip');
   if(ciberEl && ct==='h') {
-      ciberEl.innerHTML = CIBER_TIPS[Math.floor(Math.random()*CIBER_TIPS.length)];
+      let threatHtml = '';
+      if(ACTIVE_THREATS.length > 0) {
+          ACTIVE_THREATS.forEach(t => {
+              threatHtml += `<div style="background:var(--red); color:#fff; padding:8px 12px; border-radius:6px; margin-bottom:8px; border-left:4px solid #7f1d1d; box-shadow:0 2px 4px rgba(220,38,38,0.3);">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                      <b style="font-size:11px; letter-spacing:0.5px;">⚠️ ${t.title}</b>
+                      <span style="font-size:8px; background:rgba(0,0,0,0.4); padding:2px 5px; border-radius:4px; font-weight:700;">NIVEL ${t.severity}</span>
+                  </div>
+                  <div style="font-size:10px; line-height:1.4;">${t.desc}</div>
+              </div>`;
+          });
+      }
+      
+      const randomTips = [...CIBER_TIPS].sort(() => 0.5 - Math.random()).slice(0, 5);
+      let tipsHtml = `<div style="margin-top: 8px;"><b style="color:var(--redt); display:block; margin-bottom:6px;">🛡️ Tips Preventivos:</b><ul style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 6px;">` + randomTips.map(tip => `<li>${tip}</li>`).join('') + `</ul></div>`;
+      
+      ciberEl.innerHTML = threatHtml + tipsHtml;
   }
 
   if(ct==='h'){rSum();rRule();rDonuts()}
