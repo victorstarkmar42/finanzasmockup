@@ -98,9 +98,9 @@ button:active{transform:scale(.97)}
 .db h4{font-size:10px;font-weight:600;margin-bottom:5px}
 canvas.dc{display:block;margin:0 auto}
 .leg{margin-top:5px}.li{display:flex;align-items:center;gap:4px;margin:2px 0}.li .dot{width:8px;height:8px;border-radius:2px}.li span{font-size:9px;color:var(--t2)}
-/* MODULE TABS (STICKY TOP) */
-.mt{display:flex;background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:6px;gap:4px;margin-bottom:16px;overflow-x:auto;position:sticky;top:10px;z-index:100;box-shadow:var(--shadow)}
-.mb{padding:8px 12px;border-radius:8px;background:transparent;color:var(--t2);font-size:12px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:background .2s,color .2s}
+/* MODULE TABS (STICKY TOP & WRAPPING GRID) */
+.mt{display:flex;flex-wrap:wrap;justify-content:center;background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:6px;gap:4px;margin-bottom:16px;position:sticky;top:10px;z-index:100;box-shadow:var(--shadow)}
+.mb{flex:1 1 auto;justify-content:center;padding:6px 10px;border-radius:8px;background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:background .2s,color .2s}
 .mb:hover{background:var(--bg)}.mb.on{background:var(--t1);color:var(--bg)}
 .mod{display:none}.mod.vis{display:block}
 /* PANEL */
@@ -461,8 +461,6 @@ D.ln.forEach(l=>{const np=nextPayDate(l.fPago,l.frec||'mensual',l.pagados);if(np
 // Impuestos/contribuciones alerts (with pagado check)
 (D.impuestos||[]).forEach(imp=>{const k='imp_'+imp.id;if(D.alertsPag[k])return;const dd=df(imp.fFin);if(dd!==null&&dd<=30&&dd>=0)a.push({t:'warn',k,tp:'imp',m:`🏛 ${imp.desc||imp.tipo} vence en ${dd}d — $${fm(imp.costo)}`});if(dd!==null&&dd<0)a.push({t:'err',k,tp:'imp',m:`🏛 ${imp.desc||imp.tipo} VENCIDO — $${fm(imp.costo)}`})});
 return a};
-
-const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d2<0)return'<span class="badge b-re">Vencido</span>';if(d2<=30)return`<span class="badge b-am">${d2}d</span>`;return''};
 
 const rWA=()=>{const nums=D.wa||[];let h=nums.map((n,i)=>`<span class="ws">📱...${n.slice(-4)}</span><button class="bre bsm" onclick="D.wa.splice(${i},1);sv();rWA()">✕</button>`).join('');h+=`<input id="wa-inp" placeholder="+52..."><button class="bwa bsm" onclick="const v=document.getElementById('wa-inp').value.trim();if(v){D.wa.push(v);sv();rWA()}">+</button>`;if(nums.length)h+=`<button class="bwa bsm" onclick="sendWA()">Enviar</button>`;document.getElementById('wa').innerHTML=h};
 const sendWA=()=>{if(!D.wa?.length)return;const a=gAlerts();if(!a.length){alert('Sin alertas');return}const t=encodeURIComponent('🚨 *Finanzas 360*\n\n'+a.map(x=>x.m).join('\n\n'));D.wa.forEach(n=>window.open('https://wa.me/'+n.replace(/\D/g,'')+'?text='+t,'_blank'))};
@@ -1129,7 +1127,7 @@ ${segs.map((sg,i)=>{
   const ivaEst=Number(sg.costo||0)*0.16/1.16;
   return`<div class="crd" style="margin-bottom:4px;${venc?'border-color:#fca5a5;background:var(--redbg)':prox?'border-color:var(--amber);background:var(--amberbg)':''}">
   <div class="crd-h"><div>
-    <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:2px">
+    <div style="display:flex;gap:3px;flex-wrap:margin-bottom:2px">
       <span class="badge b-pu">${sg.aseguradora}</span>
       <span class="badge b-bl">${sg.tipoCobertura||'Amplia'}</span>
       <span class="badge b-gy">${sg.plazo}</span>
@@ -1164,80 +1162,6 @@ ${segs.map((sg,i)=>{
 </div></div></details>
 </div>`;
 };
-
-const addVeh=()=>{const tp=document.getElementById('vh-tp')?.value||'auto',mk=document.getElementById('vh-mk')?.value?.trim()||'',nm=document.getElementById('vh-nm')?.value?.trim()||'';if(!mk){alert('Ingresa la marca');return}D.vehs.push({id:uid(),nombre:nm||mk,tipo:tp,marca:mk,licencias:[],placas:[],tarjCirc:[],seguros:[]});sv();rVeh()};
-
-const addVehLic=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vla-tp-'+vid)?.value||'Automovilista',tt=document.getElementById('vla-tt-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vla-co-'+vid)?.value||0),fv=document.getElementById('vla-fv-'+vid)?.value||'',rc=document.getElementById('vla-rc-'+vid)?.checked||false,pe=document.getElementById('vla-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.licencias.push({id:uid(),tipo:tp,titular:tt,costo:co,fPago:td(),fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-
-const addVehPlaca=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vpa-tp-'+vid)?.value||'Particular',es=document.getElementById('vpa-es-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vpa-co-'+vid)?.value||0),fp=document.getElementById('vpa-fp-'+vid)?.value||td(),rc=document.getElementById('vpa-rc-'+vid)?.checked||false,pe=document.getElementById('vpa-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.placas.push({id:uid(),tipo:tp,estado:es,costo:co,fPago:fp,rec:rc,periodo:pe});sv();rVeh()};
-
-const addVehTC=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const co=parseFloat(document.getElementById('vtca-co-'+vid)?.value||0),fp=document.getElementById('vtca-fp-'+vid)?.value||td(),fv=document.getElementById('vtca-fv-'+vid)?.value||'',rc=document.getElementById('vtca-rc-'+vid)?.checked!==false,pe=document.getElementById('vtca-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.tarjCirc.push({id:uid(),costo:co,fPago:fp,fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-
-const addVehSeg=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;let aseg=document.getElementById('vsa-as-'+vid)?.value||'';if(aseg==='Otra...'){aseg=prompt('Nombre de la aseguradora:');if(!aseg)return}const cb=document.getElementById('vsa-cb-'+vid)?.value||'Amplia',co=parseFloat(document.getElementById('vsa-co-'+vid)?.value||0),pl=document.getElementById('vsa-pl-'+vid)?.value||'Anual',fp=document.getElementById('vsa-fp-'+vid)?.value||td(),fv=document.getElementById('vsa-fv-'+vid)?.value||'',po=document.getElementById('vsa-po-'+vid)?.value?.trim()||'',no=document.getElementById('vsa-no-'+vid)?.value?.trim()||'';if(!co){alert('Ingresa costo');return}v.seguros.push({id:uid(),aseguradora:aseg,tipoCobertura:cb,costo:co,plazo:pl,fPago:fp,fVence:fv,poliza:po,notas:no});sv();rVeh()};
-
-const updVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr]||!v[arr][idx])return;const prefixes={licencias:'vl',placas:'vp',tarjCirc:'vtc',seguros:'vs'};const el=document.getElementById(prefixes[arr]+'-'+vid+'-'+idx);if(!el)return;const ns=parseFloat(el.value);if(isNaN(ns)||ns<=0){alert('Ingresa monto válido');return}v[arr][idx].costo=ns;sv();rVeh()};
-
-const delVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr])return;v[arr].splice(idx,1);sv();rVeh()};
-
-// ═══ IMPUESTOS / CONTRIBUCIONES ══════════════════════════════════════════════
-const IMP_TIPOS=['Tenencia','Predial','Recolección de basura','Derecho de agua','Alumbrado público','Impuesto cedular','ISH (hospedaje)','ISAN (auto nuevo)','Derechos vehiculares','Contribución de mejora','Multa fiscal','Otro'];
-const IMP_PER={mensual:'Mensual',bimestral:'Bimestral',trimestral:'Trimestral',semestral:'Semestral',anual:'Anual',bianual:'Cada 2 años',unico:'Pago único'};
-
-const impTotal=()=>(D.impuestos||[]).reduce((s,i)=>s+Number(i.costo||0),0);
-
-const rImp=()=>{
-if(!D.impuestos)D.impuestos=[];
-const tImp=impTotal();
-const recImp=D.impuestos.filter(i=>i.rec);
-const vigentes=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd===null||dd>=0});
-const vencidos=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd!==null&&dd<0});
-
-document.getElementById('p-imp').innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
-  <div class="sc neg"><label>Total contribuciones</label><div class="v">$${fm(tImp)}</div></div>
-  <div class="sc"><label>Vigentes</label><div class="v">${vigentes.length}</div></div>
-  <div class="sc" style="${vencidos.length?'border-color:#fca5a5':''}"><label>Vencidos</label><div class="v" style="color:${vencidos.length?'var(--red)':'var(--t1)'}">${vencidos.length}</div></div>
-  <div class="sc blu"><label>Recurrentes</label><div class="v">${recImp.length}</div></div>
-</div>
-
-<div class="pnl"><h3>Registrar impuesto / contribución</h3>
-<p style="font-size:10px;color:var(--t3);margin-bottom:6px">Tenencia, predial, basura, alumbrado, derechos de agua y cualquier otro impuesto o contribución que pagues para vivir.</p>
-<div class="fg3">
-  <div class="fld"><label>Tipo de impuesto</label><select id="imp-tp">${IMP_TIPOS.map(t=>`<option>${t}</option>`).join('')}</select></div>
-  <div class="fld"><label>Descripción</label><input id="imp-desc" placeholder="Ej: Predial casa, Tenencia Versa 2024..."></div>
-  <div class="fld"><label>Costo ($)</label><input id="imp-co" type="number" step="0.01"></div>
-</div>
-<div class="fg4">
-  <div class="fld"><label>Fecha de pago</label><input id="imp-fp" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia inicio</label><input id="imp-fi" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia fin</label><input id="imp-ff" type="date"></div>
-  <div class="fld"><label>Periodo</label><select id="imp-pe">${Object.entries(IMP_PER).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
-</div>
-<div class="fg2">
-  <div class="tog-r" onclick="document.getElementById('imp-rc').checked=!document.getElementById('imp-rc').checked"><input type="checkbox" id="imp-rc" style="width:auto" checked> <span style="font-size:10px;font-weight:500">Recurrente (se volverá a cobrar)</span></div>
-  <div class="fld"><label>Notas</label><input id="imp-no" placeholder="Opcional"></div>
-</div>
-<button class="bp" style="margin-top:4px" onclick="addImp()">+ Registrar impuesto</button>
-</div>
-
-<div class="cg" style="margin-top:6px">${D.impuestos.map((imp,i)=>{
-  const ddF=df(imp.fFin);const venc=ddF!==null&&ddF<0;const prox=ddF!==null&&ddF<=30&&ddF>=0;
-  return`<div class="crd" style="${venc?'border-color:#fca5a5;background:var(--redbg)':prox?'border-color:var(--amber);background:var(--amberbg)':''}">
-  <div class="crd-h"><div>
-    <div style="display:flex;gap:3px;flex-wrap:margin-bottom:2px">
-      <span class="badge b-am">${imp.tipo}</span>
-      ${imp.rec?`<span class="badge b-pu">↻ ${IMP_PER[imp.periodo]||imp.periodo}</span>`:'<span class="badge b-gy">Único</span>'}
-      ${venc?'<span class="badge b-re">Vencido</span>':prox?`<span class="badge b-am">${ddF}d</span>`:'<span class="badge b-gr">Vigente</span>'}
-    </div>
-    <div class="crd-t">${imp.desc||imp.tipo}</div>
-    <div style="font-size:9px;color:var(--t3)">Pagado: ${fDate(imp.fPago)} · ${imp.fInicio?'Desde '+fDate(imp.fInicio):''} ${imp.fFin?'→ '+fDate(imp.fFin):''}</div>
-  </div>
-  <button class="bre bsm" onclick="D.impuestos.splice(${i},1);sv();rImp()">✕</button></div>
-  <div class="crd-v" style="color:var(--red)">$${fm(imp.costo)}</div>
-  ${imp.notas?`<div style="font-size:9px;color:var(--t3);margin-top:2px">${imp.notas}</div>`:''}
-  <div class="crd-f"><input id="ui-${i}" type="number" step="0.01" placeholder="Actualizar $"><button class="bge bsm" onclick="updImp(${i})">✓</button></div>
-</div>`}).join('')||'<div class="empty">Sin impuestos registrados.</div>'}</div>
-`};
 
 const addImp=()=>{const tp=document.getElementById('imp-tp')?.value||'Otro',desc=document.getElementById('imp-desc')?.value?.trim()||'',co=parseFloat(document.getElementById('imp-co')?.value||0),fp=document.getElementById('imp-fp')?.value||td(),fi2=document.getElementById('imp-fi')?.value||'',ff=document.getElementById('imp-ff')?.value||'',pe=document.getElementById('imp-pe')?.value||'anual',rc=document.getElementById('imp-rc')?.checked!==false,no=document.getElementById('imp-no')?.value?.trim()||'';if(!co){alert('Ingresa costo');return}D.impuestos.push({id:uid(),tipo:tp,desc:desc||tp,costo:co,fPago:fp,fInicio:fi2,fFin:ff,periodo:pe,rec:rc,notas:no});sv();rImp();rAll()};
 
