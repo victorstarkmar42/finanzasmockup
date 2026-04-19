@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Finanzas 360 v12.5</title>
+<title>Finanzas 360 v12.6</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
@@ -205,7 +205,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 
 <div class="sticky-header">
   <!-- TOP CONTROLS -->
-  <div class="nav"><div class="logo">Finanzas 360 <span style="font-size:10px;color:var(--t3);font-weight:400">v12.5 EDU</span></div>
+  <div class="nav"><div class="logo">Finanzas 360 <span style="font-size:10px;color:var(--t3);font-weight:400">v12.6 EFECTIVO</span></div>
   <div class="nav-r">
     <button id="theme-btn" class="ptab" style="font-size:14px; padding:3px 6px; background:var(--card); border:1px solid var(--brd); margin-right:4px;" onclick="toggleTheme()">☀️</button>
     <div class="wa-area" id="wa"></div>
@@ -286,7 +286,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════════
-// FINANZAS 360 v12.5 — THEME SYSTEM, INEGI PROFILE & ADVANCED EDU MODULE
+// FINANZAS 360 v12.6 — ADVANCED DEBIT/CASH AND FAMILY PAYMENT UPGRADES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const CIBER_TIPS = [
@@ -330,7 +330,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-const APP_VER = '12.5.2';
+const APP_VER = '12.6.0';
 if(localStorage.getItem('f360_ver') !== APP_VER) {
     localStorage.removeItem('f360v12_demo2');
     localStorage.setItem('f360_ver', APP_VER);
@@ -364,10 +364,11 @@ const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d
 // ═══ STATE ════════════════════════════════════════════════════════════════════
 let D={m:[],ah:[],de:[],rc:[],ln:[],wa:[],fut:[],cAh:[],cDe:[],accts:[]};
 try{const s=localStorage.getItem('f360v12_demo2');if(s)D=JSON.parse(s)}catch(e){console.warn('Error parsing DB',e)}
-['cAh','cDe','ln','fut','accts','cInst','cfgCats','cfgExtraConcepts','cfgTaxes','vehs','impuestos','cfgFutItems','fam','edu','cfgEduInst','cfgEduCarreras'].forEach(k=>{if(!D[k])D[k]=[]});
+['cAh','cDe','ln','fut','accts','cInst','cfgCats','cfgExtraConcepts','cfgTaxes','vehs','impuestos','cfgFutItems','fam','edu','cfgEduInst','cfgEduCarreras', 'cfgAcctNames'].forEach(k=>{if(!D[k])D[k]=[]});
 if(D.cfgFutItems.length===0)D.cfgFutItems=['Celular','Laptop','Auto nuevo','Casa nueva','Casa en renta','Viaje','Negocio'];
 if(D.cfgEduInst.length===0)D.cfgEduInst=['UNAM','IPN','Tec de Monterrey','UVM','UADY'];
 if(D.cfgEduCarreras.length===0)D.cfgEduCarreras=['Ing. Software','Derecho','Medicina','Administración','Ing. Industrial'];
+if(D.cfgAcctNames.length===0)D.cfgAcctNames=['BBVA Nómina','Fondo Gastos','Efectivo Cartera','Caja Chica','Ahorros'];
 if(D.dependientes===undefined)D.dependientes=0;
 if(!D.nomCfg)D.nomCfg={regimen:'IMSS',segVida:false,frecPago:'quincenal',dedsEnCada:false};
 if(!Array.isArray(D.wa))D.wa=D.wa?[D.wa]:[];
@@ -867,7 +868,10 @@ document.getElementById('p-fam').innerHTML = eduHtml + `
   <div class="fld"><label>Periodo</label><select id="fam-pe">${Object.entries(FR).map(([k,v])=>`<option value="${k}">${v.l}</option>`).join('')}<option value="anual">Anual</option></select></div>
   <div class="tog-r" style="margin-top:10px" onclick="document.getElementById('fam-rc').checked=!document.getElementById('fam-rc').checked"><input type="checkbox" id="fam-rc" style="width:auto" checked> <span style="font-size:10px;font-weight:500">Recurrente</span></div>
 </div>
-<div class="fld"><label>Notas</label><input id="fam-no" placeholder="Opcional"></div>
+<div class="fg2">
+  <div class="fld"><label>Cuenta de cobro (descuenta 1er pago ahora)</label><select id="fam-acct"><option value="">Solo registrar (No descontar)</option>${acctOpts}</select></div>
+  <div class="fld"><label>Notas</label><input id="fam-no" placeholder="Opcional"></div>
+</div>
 <button class="bbl" style="margin-top:4px; width:100%" onclick="addFam()">+ Registrar compromiso</button>
 </div>
 
@@ -983,7 +987,54 @@ const payEduGasto=id=>{
     sv();rFam();rAll();
 };
 
-const addFam=()=>{const tp=document.getElementById('fam-tp')?.value||'Otro',desc=document.getElementById('fam-desc')?.value?.trim()||'',co=parseFloat(document.getElementById('fam-co')?.value||0),fp=document.getElementById('fam-fp')?.value||td(),pe=document.getElementById('fam-pe')?.value||'mensual',rc=document.getElementById('fam-rc')?.checked!==false,no=document.getElementById('fam-no')?.value?.trim()||'';if(!co||!desc){alert('Ingresa costo y descripción');return}D.fam.push({id:uid(),tipo:tp,desc,costo:co,fPago:fp,periodo:pe,rec:rc,notas:no});sv();rFam();rAll()};
+const addFam=()=>{
+    const tp=document.getElementById('fam-tp')?.value||'Otro',
+          desc=document.getElementById('fam-desc')?.value?.trim()||'',
+          co=parseFloat(document.getElementById('fam-co')?.value||0),
+          fp=document.getElementById('fam-fp')?.value||td(),
+          pe=document.getElementById('fam-pe')?.value||'mensual',
+          rc=document.getElementById('fam-rc')?.checked!==false,
+          no=document.getElementById('fam-no')?.value?.trim()||'',
+          acctVal=document.getElementById('fam-acct')?.value;
+          
+    if(!co||!desc){alert('Ingresa costo y descripción');return}
+    
+    let nextPago = fp;
+    let fromName = 'Efectivo/Otro';
+    let isPaid = false;
+
+    if(acctVal) {
+        const [type, acctId]=acctVal.split(':');
+        if (type==='deb') {
+            const ac=D.accts.find(a=>a.id===acctId);
+            if(ac) {
+                if(ac.saldo<co) if(!confirm(`Saldo insuficiente en ${ac.nombre}. ¿Continuar?`)) return;
+                ac.saldo-=co; fromName=ac.nombre; isPaid=true;
+            }
+        } else if (type==='ah') {
+            const ah=D.ah.find(a=>a.id===acctId);
+            if(ah) {
+                if(ah.s<co) if(!confirm(`Saldo insuficiente en ${ah.n}. ¿Continuar?`)) return;
+                ah.s-=co; ah.h=[...(ah.h||[]),{f:td(),s:ah.s}]; fromName=ah.n; isPaid=true;
+            }
+        } else if (type==='cre') {
+            const cre=D.de.find(d=>d.id===acctId);
+            if(cre){
+                cre.sal+=co; cre.disp=cre.lim-cre.sal; cre.h=[...(cre.h||[]),{f:td(),s:cre.sal}]; fromName=cre.n; isPaid=true;
+            }
+        }
+    }
+
+    if(isPaid) {
+        D.m.push({id:uid(), t:'egreso', fam:'EDUC_FAM', c:desc, i:fromName, monto:co, f:td()});
+        if(rc) {
+            nextPago = pe==='anual'? (new Date(new Date(fp).setFullYear(new Date(fp).getFullYear()+1)).toISOString().split('T')[0]) : (nf(fp, pe) || td());
+        }
+    }
+
+    D.fam.push({id:uid(),tipo:tp,desc,costo:co,fPago:nextPago,periodo:pe,rec:rc,notas:no});
+    sv();rFam();rAll()
+};
 
 const payFam=id=>{
     const item=D.fam.find(x=>x.id===id);if(!item)return;
@@ -1182,36 +1233,40 @@ const sLn=()=>{const dd=document.getElementById('ln-d')?.value||'Préstamo',pe=d
 // ═══ CUENTAS DÉBITO ══════════════════════════════════════════════════════════
 const rDb=()=>{
 if(!D.xferLog)D.xferLog=[];
-const totalLiq=D.accts.reduce((s,a)=>s+Number(a.saldo||0),0);
+const totalEf = D.accts.filter(a=>a.banco==='Efectivo'||a.nombre.toLowerCase().includes('efectivo')).reduce((s,a)=>s+Number(a.saldo||0),0);
+const totalLiq = D.accts.filter(a=>!(a.banco==='Efectivo'||a.nombre.toLowerCase().includes('efectivo'))).reduce((s,a)=>s+Number(a.saldo||0),0);
 const totalAh=D.ah.reduce((s,a)=>s+Number(a.s||0),0);
-const tagColors={'Nómina':'b-bl','Principal':'b-bl','Transferencia':'b-pu','Freelance':'b-gr','Gastos diarios':'b-am','Recepción':'b-te','Respaldo':'b-gy'};
 
-const debOpts=D.accts.map(a=>`<option value="deb:${a.id}">[Débito] ${a.nombre} — $${fm(a.saldo)}</option>`).join('');
+const tagColors={'Nómina':'b-bl','Principal':'b-bl','Transferencia':'b-pu','Freelance':'b-gr','Gastos diarios':'b-am','Recepción':'b-te','Respaldo':'b-gy','Efectivo':'b-gr'};
+
+const debOpts=D.accts.map(a=>`<option value="deb:${a.id}">[Débito/Efectivo] ${a.nombre} — $${fm(a.saldo)}</option>`).join('');
 const ahOpts2=D.ah.map(a=>`<option value="ah:${a.id}">[Ahorro] ${a.n} — $${fm(a.s)}</option>`).join('');
 const credOpts=D.de.map(d=>`<option value="cre:${d.id}">[Crédito] ${d.n} — Deuda: $${fm(d.sal)}</option>`).join('');
 
-const allOptsOrig=`<optgroup label="── Cuentas Débito ──">${debOpts}</optgroup><optgroup label="── Cuentas Ahorro ──">${ahOpts2}</optgroup>`;
-const allOptsDest=`<optgroup label="── Cuentas Débito ──">${debOpts}</optgroup><optgroup label="── Tarjetas Crédito ──">${credOpts}</optgroup><optgroup label="── Cuentas Ahorro ──">${ahOpts2}</optgroup>`;
+const allOptsOrig=`<optgroup label="── Cuentas Débito y Efectivo ──">${debOpts}</optgroup><optgroup label="── Cuentas Ahorro ──">${ahOpts2}</optgroup>`;
+const allOptsDest=`<optgroup label="── Cuentas Débito y Efectivo ──">${debOpts}</optgroup><optgroup label="── Tarjetas Crédito ──">${credOpts}</optgroup><optgroup label="── Cuentas Ahorro ──">${ahOpts2}</optgroup>`;
+const nomOpts = D.cfgAcctNames.map(n=>`<option value="${n}">${n}</option>`).join('') + `<option value="_o">+ Nuevo nombre...</option>`;
 
 const recentLog=(D.xferLog||[]).slice(-6).reverse();
 
 document.getElementById('p-b').innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-  <div class="liquid-total" style="margin-bottom:0"><label>Débito total</label><div class="v">$${fm(totalLiq)}</div><div style="font-size:9px;color:var(--t3)">${D.accts.length} cuentas</div></div>
-  <div class="liquid-total" style="margin-bottom:0;background:linear-gradient(135deg,var(--bluebg),var(--card)); border-color:var(--green)"><label>Ahorro total</label><div class="v" style="color:var(--green)">$${fm(totalAh)}</div><div style="font-size:9px;color:var(--t3)">${D.ah.length} cuentas</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">
+  <div class="liquid-total" style="margin-bottom:0"><label>Débito total</label><div class="v">$${fm(totalLiq)}</div></div>
+  <div class="liquid-total" style="margin-bottom:0;background:linear-gradient(135deg,var(--amberbg),var(--card)); border-color:var(--amber)"><label>Efectivo Total</label><div class="v" style="color:var(--amber)">$${fm(totalEf)}</div></div>
+  <div class="liquid-total" style="margin-bottom:0;background:linear-gradient(135deg,var(--greenbg),var(--card)); border-color:var(--green)"><label>Ahorro total</label><div class="v" style="color:var(--green)">$${fm(totalAh)}</div></div>
 </div>
 
-<div class="pnl"><h3>Nueva cuenta débito</h3>
-<div class="fg3"><div class="fld"><label>Nombre</label><input id="db-n" placeholder="BBVA Nómina"></div><div class="fld"><label>Banco</label><select id="db-b"><option>BBVA</option><option>Nu</option><option>Mercado Pago</option><option>Azteca</option><option>KLAR</option><option>Santander</option><option>Hey Banco</option><option>Fondeadora</option><option value="_o">Otro...</option></select></div><div class="fld"><label>Saldo ($)</label><input id="db-s" type="number" step="0.01"></div></div>
+<div class="pnl"><h3>Nueva cuenta débito / Caja de Efectivo</h3>
+<div class="fg3"><div class="fld"><label>Nombre</label><select id="db-n" onchange="if(this.value==='_o'){const v=prompt('Nombre de la cuenta:');if(v){D.cfgAcctNames.push(v);sv();rDb();setTimeout(()=>document.getElementById('db-n').value=v,10)}}">${nomOpts}</select></div><div class="fld"><label>Banco</label><select id="db-b"><option>BBVA</option><option>Nu</option><option>Mercado Pago</option><option>Azteca</option><option>KLAR</option><option>Santander</option><option>Hey Banco</option><option>Fondeadora</option><option>Efectivo</option><option value="_o">Otro...</option></select></div><div class="fld"><label>Saldo ($)</label><input id="db-s" type="number" step="0.01"></div></div>
 <div class="fg2"><div class="fld"><label>¿De dónde llega el dinero?</label><select id="db-o"><option>Nómina</option><option>Transferencia</option><option>Freelance</option><option>Efectivo</option><option>Otro</option></select></div><div class="fld"><label>Etiqueta personalizada</label><input id="db-tag" placeholder="Ej: Principal, Gastos, Respaldo..."></div></div>
 <button class="bbl" style="margin-top:5px;width:100%;padding:8px;font-weight:600" onclick="sDb()">+ Agregar cuenta</button></div>
 
 <h3 style="font-size:12px;margin:8px 0 4px">Mis cuentas</h3>
-<div class="acct-grid">${D.accts.map(a=>`<div class="acct"><div style="display:flex;justify-content:space-between"><div><div class="acct-name">${a.nombre}</div><div style="font-size:9px;color:var(--t3)">${a.banco} · ${a.origen}</div></div><button class="bre bsm" onclick="D.accts=D.accts.filter(x=>x.id!=='${a.id}');sv();rDb()">✕</button></div><div class="acct-bal">$${fm(a.saldo)}</div><div style="display:flex;gap:2px;flex-wrap:wrap;margin-bottom:4px">${(a.tags||[]).map(t=>`<span class="badge ${tagColors[t]||'b-gy'}">${t}</span>`).join('')}</div><div class="crd-f"><input id="udb-${a.id}" type="number" step="0.01" placeholder="Actualizar saldo"><button class="bge bsm" onclick="uDb('${a.id}')">✓</button></div></div>`).join('')||'<div class="empty">Sin cuentas.</div>'}</div>
+<div class="acct-grid">${D.accts.map(a=>`<div class="acct"><div style="display:flex;justify-content:space-between"><div><div class="acct-name">${a.nombre}</div><div style="font-size:9px;color:var(--t3)">${a.banco} · ${a.origen}</div></div><button class="bre bsm" onclick="D.accts=D.accts.filter(x=>x.id!=='${a.id}');sv();rDb()">✕</button></div><div class="acct-bal" style="color:${a.banco==='Efectivo'||a.nombre.toLowerCase().includes('efectivo')?'var(--amber)':'var(--blue)'}">$${fm(a.saldo)}</div><div style="display:flex;gap:2px;flex-wrap:wrap;margin-bottom:4px">${(a.tags||[]).map(t=>`<span class="badge ${tagColors[t]||'b-gy'}">${t}</span>`).join('')}</div><div class="crd-f"><input id="udb-${a.id}" type="number" step="0.01" placeholder="Actualizar saldo"><button class="bge bsm" onclick="uDb('${a.id}')">✓</button></div></div>`).join('')||'<div class="empty">Sin cuentas.</div>'}</div>
 
 <div class="pnl" style="margin-top:8px;border:1.5px solid var(--blue)">
-<h3 style="margin-bottom:4px">↔ Transferir o Pagar</h3>
-<p style="font-size:10px;color:var(--t3);margin-bottom:8px">Entre cuentas débito, de débito a ahorro, o paga directamente a una Tarjeta de Crédito.</p>
+<h3 style="margin-bottom:4px">↔ Transferir, Pagar TDC o Recibir Efectivo</h3>
+<p style="font-size:10px;color:var(--t3);margin-bottom:8px">Mueve dinero entre cuentas, paga tu Tarjeta de Crédito, <b>o registra si pagaste una recarga/servicio con tu tarjeta y un amigo/familiar te lo pagó en efectivo (transfiriendo de Crédito/Débito a Efectivo).</b></p>
 <div style="display:grid;grid-template-columns:1fr 30px 1fr;gap:6px;align-items:end;margin-bottom:6px">
   <div class="fld"><label>Origen (sale de)</label><select id="xf-from" style="font-size:11px">${allOptsOrig}</select></div>
   <div style="text-align:center;padding-bottom:6px;font-size:18px;font-weight:700;color:var(--blue)">→</div>
@@ -1219,7 +1274,7 @@ document.getElementById('p-b').innerHTML=`
 </div>
 <div class="fg2">
   <div class="fld"><label>Monto ($)</label><input id="xf-amt" type="number" step="0.01" placeholder="0.00"></div>
-  <div class="fld"><label>Concepto (opcional)</label><input id="xf-nota" type="text" placeholder="Ej: Fondeo ahorro, Pago TDC..."></div>
+  <div class="fld"><label>Concepto (opcional)</label><input id="xf-nota" type="text" placeholder="Ej: Fondeo ahorro, Pago TDC, Recarga a primo..."></div>
 </div>
 <button class="bbl" style="margin-top:5px;width:100%;padding:9px;font-size:13px;font-weight:700" onclick="xfer()">↔ Realizar transferencia</button>
 </div>
@@ -1271,6 +1326,11 @@ document.getElementById('p-cfg').innerHTML=`
 <div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">👥 Perfil Personal</h3>
 <div class="fg2"><div class="fld"><label>Dependientes Económicos (hijos, pareja, padres)</label><input id="cfg-dep" type="number" min="0" value="${D.dependientes||0}" onchange="D.dependientes=parseInt(this.value)||0;sv();rAll()"></div></div>
 <p style="font-size:9px; color:var(--t3); margin-top:4px">Esto ayuda a calcular tu ingreso per cápita y clase social INEGI en el Dashboard.</p></div>
+
+<!-- NOMBRES DE CUENTAS -->
+<div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">🏷 Nombres de Cuentas (Débito/Efectivo)</h3>
+<div class="fg2"><div class="fld"><label>Nuevo nombre</label><input id="cfg-nacct" placeholder="Ej: Caja Chica..."></div><div style="display:flex;align-items:flex-end;padding-bottom:5px"><button class="bbl" onclick="addCfgAcctName()">+ Agregar</button></div></div>
+<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">${D.cfgAcctNames.map((n,i)=>`<span class="badge b-gy">${n} <button style="background:none;border:none;cursor:pointer;color:var(--red);font-size:10px;padding:0 0 0 3px" onclick="D.cfgAcctNames.splice(${i},1);sv();rCfg()">✕</button></span>`).join('')}</div></div>
 
 <!-- OBJETIVOS FUTURO -->
 <div class="pnl" style="margin-top:5px"><h3 style="font-size:12px">🎯 Objetivos de Simulador (Futuro)</h3>
@@ -1330,6 +1390,7 @@ ${D.cfgTaxes?.length?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top
 <div class="fg3"><button class="bre" onclick="if(confirm('¿Borrar TODOS los datos?')){localStorage.removeItem('f360v12_demo2');location.reload()}">Borrar todo</button><button class="bbl" onclick="const blob=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='finanzas360_backup.json';a.click()">📥 Exportar</button><button class="bge" onclick="const i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{D=JSON.parse(ev.target.result);sv();location.reload()}catch(e2){alert('Error')}};r.readAsText(e.target.files[0])};i.click()">📤 Importar</button></div></div>
 `;};
 
+const addCfgAcctName=()=>{const v=document.getElementById('cfg-nacct')?.value?.trim();if(v&&!D.cfgAcctNames.includes(v)){D.cfgAcctNames.push(v);sv();rCfg()}};
 const addCfgFut=()=>{const v=document.getElementById('cfg-fn')?.value?.trim();if(v&&!D.cfgFutItems.includes(v)){D.cfgFutItems.push(v);sv();rCfg()}};
 const renCfgFut=(i)=>{const nv=prompt('Renombrar objetivo:',D.cfgFutItems[i]);if(nv&&nv.trim()){D.cfgFutItems[i]=nv.trim();sv();rCfg()}};
 const delCfgFut=(i)=>{if(confirm('¿Eliminar objetivo?')){D.cfgFutItems.splice(i,1);sv();rCfg()}};
@@ -1529,74 +1590,6 @@ ${segs.map((sg,i)=>{
 </div>`;
 };
 
-const addVeh=()=>{const tp=document.getElementById('vh-tp')?.value||'auto',mk=document.getElementById('vh-mk')?.value?.trim()||'',nm=document.getElementById('vh-nm')?.value?.trim()||'';if(!mk){alert('Ingresa la marca');return}D.vehs.push({id:uid(),nombre:nm||mk,tipo:tp,marca:mk,licencias:[],placas:[],tarjCirc:[],seguros:[]});sv();rVeh()};
-const addVehLic=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vla-tp-'+vid)?.value||'Automovilista',tt=document.getElementById('vla-tt-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vla-co-'+vid)?.value||0),fv=document.getElementById('vla-fv-'+vid)?.value||'',rc=document.getElementById('vla-rc-'+vid)?.checked||false,pe=document.getElementById('vla-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.licencias.push({id:uid(),tipo:tp,titular:tt,costo:co,fPago:td(),fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-const addVehPlaca=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vpa-tp-'+vid)?.value||'Particular',es=document.getElementById('vpa-es-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vpa-co-'+vid)?.value||0),fp=document.getElementById('vpa-fp-'+vid)?.value||td(),rc=document.getElementById('vpa-rc-'+vid)?.checked||false,pe=document.getElementById('vpa-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.placas.push({id:uid(),tipo:tp,estado:es,costo:co,fPago:fp,rec:rc,periodo:pe});sv();rVeh()};
-const addVehTC=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const co=parseFloat(document.getElementById('vtca-co-'+vid)?.value||0),fp=document.getElementById('vtca-fp-'+vid)?.value||td(),fv=document.getElementById('vtca-fv-'+vid)?.value||'',rc=document.getElementById('vtca-rc-'+vid)?.checked!==false,pe=document.getElementById('vtca-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.tarjCirc.push({id:uid(),costo:co,fPago:fp,fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-const addVehSeg=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;let aseg=document.getElementById('vsa-as-'+vid)?.value||'';if(aseg==='Otra...'){aseg=prompt('Nombre de la aseguradora:');if(!aseg)return}const cb=document.getElementById('vsa-cb-'+vid)?.value||'Amplia',co=parseFloat(document.getElementById('vsa-co-'+vid)?.value||0),pl=document.getElementById('vsa-pl-'+vid)?.value||'Anual',fp=document.getElementById('vsa-fp-'+vid)?.value||td(),fv=document.getElementById('vsa-fv-'+vid)?.value||'',po=document.getElementById('vsa-po-'+vid)?.value?.trim()||'',no=document.getElementById('vsa-no-'+vid)?.value?.trim()||'';if(!co){alert('Ingresa costo');return}v.seguros.push({id:uid(),aseguradora:aseg,tipoCobertura:cb,costo:co,plazo:pl,fPago:fp,fVence:fv,poliza:po,notas:no});sv();rVeh()};
-const updVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr]||!v[arr][idx])return;const prefixes={licencias:'vl',placas:'vp',tarjCirc:'vtc',seguros:'vs'};const el=document.getElementById(prefixes[arr]+'-'+vid+'-'+idx);if(!el)return;const ns=parseFloat(el.value);if(isNaN(ns)||ns<=0){alert('Ingresa monto válido');return}v[arr][idx].costo=ns;sv();rVeh()};
-const delVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr])return;v[arr].splice(idx,1);sv();rVeh()};
-
-// ═══ IMPUESTOS / CONTRIBUCIONES ══════════════════════════════════════════════
-const IMP_TIPOS=['Tenencia','Predial','Recolección de basura','Derecho de agua','Alumbrado público','Impuesto cedular','ISH (hospedaje)','ISAN (auto nuevo)','Derechos vehiculares','Contribución de mejora','Multa fiscal','Otro'];
-const IMP_PER={mensual:'Mensual',bimestral:'Bimestral',trimestral:'Trimestral',semestral:'Semestral',anual:'Anual',bianual:'Cada 2 años',unico:'Pago único'};
-
-const impTotal=()=>(D.impuestos||[]).reduce((s,i)=>s+Number(i.costo||0),0);
-
-const rImp=()=>{
-if(!D.impuestos)D.impuestos=[];
-const tImp=impTotal();
-const recImp=D.impuestos.filter(i=>i.rec);
-const vigentes=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd===null||dd>=0});
-const vencidos=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd!==null&&dd<0});
-
-document.getElementById('p-imp').innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
-  <div class="sc neg"><label>Total contribuciones</label><div class="v">$${fm(tImp)}</div></div>
-  <div class="sc"><label>Vigentes</label><div class="v">${vigentes.length}</div></div>
-  <div class="sc" style="${vencidos.length?'border-color:#fca5a5':''}"><label>Vencidos</label><div class="v" style="color:${vencidos.length?'var(--red)':'var(--t1)'}">${vencidos.length}</div></div>
-  <div class="sc blu"><label>Recurrentes</label><div class="v">${recImp.length}</div></div>
-</div>
-
-<div class="pnl"><h3>Registrar impuesto / contribución</h3>
-<p style="font-size:10px;color:var(--t3);margin-bottom:6px">Tenencia, predial, basura, alumbrado, derechos de agua y cualquier otro impuesto o contribución que pagues para vivir.</p>
-<div class="fg3">
-  <div class="fld"><label>Tipo de impuesto</label><select id="imp-tp">${IMP_TIPOS.map(t=>`<option>${t}</option>`).join('')}</select></div>
-  <div class="fld"><label>Descripción</label><input id="imp-desc" placeholder="Ej: Predial casa, Tenencia Versa 2024..."></div>
-  <div class="fld"><label>Costo ($)</label><input id="imp-co" type="number" step="0.01"></div>
-</div>
-<div class="fg4">
-  <div class="fld"><label>Fecha de pago</label><input id="imp-fp" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia inicio</label><input id="imp-fi" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia fin</label><input id="imp-ff" type="date"></div>
-  <div class="fld"><label>Periodo</label><select id="imp-pe">${Object.entries(IMP_PER).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
-</div>
-<div class="fg2">
-  <div class="tog-r" onclick="document.getElementById('imp-rc').checked=!document.getElementById('imp-rc').checked"><input type="checkbox" id="imp-rc" style="width:auto" checked> <span style="font-size:10px;font-weight:500">Recurrente (se volverá a cobrar)</span></div>
-  <div class="fld"><label>Notas</label><input id="imp-no" placeholder="Opcional"></div>
-</div>
-<button class="bp" style="margin-top:4px" onclick="addImp()">+ Registrar impuesto</button>
-</div>
-
-<div class="cg" style="margin-top:6px">${D.impuestos.map((imp,i)=>{
-  const ddF=df(imp.fFin);const venc=ddF!==null&&ddF<0;const prox=ddF!==null&&ddF<=30&&ddF>=0;
-  return`<div class="crd" style="${venc?'border-color:#fca5a5;background:var(--redbg)':prox?'border-color:var(--amber);background:var(--amberbg)':''}">
-  <div class="crd-h"><div>
-    <div style="display:flex;gap:3px;flex-wrap:margin-bottom:2px">
-      <span class="badge b-am">${imp.tipo}</span>
-      ${imp.rec?`<span class="badge b-pu">↻ ${IMP_PER[imp.periodo]||imp.periodo}</span>`:'<span class="badge b-gy">Único</span>'}
-      ${venc?'<span class="badge b-re">Vencido</span>':prox?`<span class="badge b-am">${ddF}d</span>`:'<span class="badge b-gr">Vigente</span>'}
-    </div>
-    <div class="crd-t">${imp.desc||imp.tipo}</div>
-    <div style="font-size:9px;color:var(--t3)">Pagado: ${fDate(imp.fPago)} · ${imp.fInicio?'Desde '+fDate(imp.fInicio):''} ${imp.fFin?'→ '+fDate(imp.fFin):''}</div>
-  </div>
-  <button class="bre bsm" onclick="D.impuestos.splice(${i},1);sv();rImp()">✕</button></div>
-  <div class="crd-v" style="color:var(--red)">$${fm(imp.costo)}</div>
-  ${imp.notas?`<div style="font-size:9px;color:var(--t3);margin-top:2px">${imp.notas}</div>`:''}
-  <div class="crd-f"><input id="ui-${i}" type="number" step="0.01" placeholder="Actualizar $"><button class="bge bsm" onclick="updImp(${i})">✓</button></div>
-</div>`}).join('')||'<div class="empty">Sin impuestos registrados.</div>'}</div>
-`};
-
 const addImp=()=>{const tp=document.getElementById('imp-tp')?.value||'Otro',desc=document.getElementById('imp-desc')?.value?.trim()||'',co=parseFloat(document.getElementById('imp-co')?.value||0),fp=document.getElementById('imp-fp')?.value||td(),fi2=document.getElementById('imp-fi')?.value||'',ff=document.getElementById('imp-ff')?.value||'',pe=document.getElementById('imp-pe')?.value||'anual',rc=document.getElementById('imp-rc')?.checked!==false,no=document.getElementById('imp-no')?.value?.trim()||'';if(!co){alert('Ingresa costo');return}D.impuestos.push({id:uid(),tipo:tp,desc:desc||tp,costo:co,fPago:fp,fInicio:fi2,fFin:ff,periodo:pe,rec:rc,notas:no});sv();rImp();rAll()};
 
 const updImp=(idx)=>{const el=document.getElementById('ui-'+idx);if(!el)return;const ns=parseFloat(el.value);if(isNaN(ns)||ns<=0)return;D.impuestos[idx].costo=ns;sv();rImp();rAll()};
@@ -1649,7 +1642,7 @@ const rAll=()=>{
       }
       
       const randomTips = [...CIBER_TIPS].sort(() => 0.5 - Math.random()).slice(0, 5);
-      let tipsHtml = `<div style="margin-top: 8px;"><b style="color:var(--redt); display:block; margin-bottom:6px;">🛡️ Tips Preventivos:</b><ul style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 6px;">` + randomTips.map(tip => `<li>${tip}</li>`).join('') + `</ul></div>`;
+      let tipsHtml = `<div style="margin-top: 8px;"><b style="color:var(--redt); display:block; margin-bottom:6px;">🛡️ Tips Preventivos:</b><ul style="padding-left: 16px; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 10px; color: var(--t2);">` + randomTips.map(tip => `<li>${tip}</li>`).join('') + `</ul></div>`;
       
       ciberEl.innerHTML = threatHtml + tipsHtml;
   }
