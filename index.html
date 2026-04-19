@@ -299,7 +299,13 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-const CATS={NOMINA:{n:'Nómina',iv:0,ie:0,r:'',c:['Nómina Q1','Nómina Q2']},EXTRA:{n:'Extra',iv:0,ie:0,r:'',c:['Freelance','Venta','Bono','Renta recibida']},CREDITO:{n:'Crédito',iv:0,ie:0,r:'N',c:['Traspaso','Comisión','Intereses','Anualidad']},SERVICIOS:{n:'Servicios',iv:.16,ie:0,rec:1,r:'N',c:[{n:'Internet',f:'mensual'},{n:'Celular',f:'mensual'},{n:'Luz',f:'bimestral'},{n:'Agua',f:'trimestral'},{n:'Gas',f:'bimestral'}]},ALIMENTOS:{n:'Alimentos',iv:0,ie:0,r:'N',c:['Frutas/Verduras','Carne/Pollo','Tortillas']},DESPENSA:{n:'Despensa',iv:.16,ie:0,r:'N',c:['Abarrotes','Limpieza','Higiene','Super (IVA ticket)']},SALUD:{n:'Salud',iv:0,ie:0,r:'N',c:['Consulta','Medicinas','Seguro']},RENTA:{n:'Renta',iv:0,ie:0,r:'N',c:['Renta','Hipoteca']},TRANSPORTE:{n:'Transporte',iv:.16,ie:.08,r:'N',c:['Gasolina','Manten.','Seguro Auto']},EDUC_FAM:{n:'Familia/Edu',iv:0,ie:0,r:'N',c:['Colegiatura','Manutención','Mesada','Cursos','Pareja','Hijos']},APP:{n:'App',iv:.16,ie:0,r:'D',c:['Uber','DiDi','InDriver','Rappi']},ENTRET:{n:'Entret.',iv:.16,ie:0,rec:1,r:'D',c:[{n:'Netflix',f:'mensual'},{n:'Spotify',f:'mensual'},{n:'Disney+',f:'mensual'},{n:'Max',f:'mensual'},{n:'Cine',f:null}]},RESTAURANTES:{n:'Restaurantes',iv:.16,ie:0,r:'D',c:['Restaurante','Café','Comida rápida']},MODA:{n:'Compras',iv:.16,ie:0,r:'D',c:['Ropa','Calzado','Electrónica']},VIAJES:{n:'Viajes',iv:.16,ie:0,r:'D',c:['Vuelos','Hotel','Tour']},AHORRO_INV:{n:'Ahorro/Inv',iv:0,ie:0,r:'A',c:['Depósito','CETES','Fondo emerg.']},DEUDA_PAGO:{n:'Pago Deudas',iv:0,ie:0,r:'A',c:['Abono extra','Pago tarjeta','Pago préstamo']}};
+const APP_VER = '12.5.2';
+if(localStorage.getItem('f360_ver') !== APP_VER) {
+    localStorage.removeItem('f360v12_demo2');
+    localStorage.setItem('f360_ver', APP_VER);
+}
+
+const CATS={NOMINA:{n:'Nómina',iv:0,ie:0,r:'',c:['Nómina Q1','Nómina Q2']},EXTRA:{n:'Extra',iv:0,ie:0,r:'',c:['Freelance','Venta','Bono','Renta recibida']},CREDITO:{n:'Crédito',iv:0,ie:0,r:'N',c:['Traspaso','Comisión','Intereses','Anualidad']},SERVICIOS:{n:'Servicios',iv:.16,ie:0,rec:1,r:'N',c:[{n:'Internet',f:'mensual'},{n:'Celular',f:'mensual'},{n:'Luz',f:'bimestral'},{n:'Agua',f:'trimestral'},{n:'Gas',f:'bimestral'}]},ALIMENTOS:{n:'Alimentos',iv:0,ie:0,r:'N',c:['Frutas/Verduras','Carne/Pollo','Tortillas']},DESPENSA:{n:'Despensa',iv:.16,ie:0,r:'N',c:['Abarrotes','Limpieza','Higiene','Super (IVA ticket)']},SALUD:{n:'Salud',iv:0,ie:0,r:'N',c:['Consulta','Medicinas','Seguro']},RENTA:{n:'Renta',iv:0,ie:0,r:'N',c:['Renta','Hipoteca']},TRANSPORTE:{n:'Transporte',iv:.16,ie:.08,r:'N',c:['Particular - Gasolina','Particular - Manten.','Particular - Seguro','Público - Va y Ven','Público - Ie-tram','Público - Autobús']},EDUC_FAM:{n:'Familia/Edu',iv:0,ie:0,r:'N',c:['Colegiatura','Manutención','Mesada','Cursos','Pareja','Hijos']},APP:{n:'Plataformas digitales de movilidad',iv:.16,ie:0,r:'D',c:['Uber','DiDi','InDrive','Rappi']},ENTRET:{n:'Entret.',iv:.16,ie:0,rec:1,r:'D',c:[{n:'Netflix',f:'mensual'},{n:'Spotify',f:'mensual'},{n:'Disney+',f:'mensual'},{n:'Max',f:'mensual'},{n:'Cine',f:null}]},RESTAURANTES:{n:'Restaurantes',iv:.16,ie:0,r:'D',c:['Restaurante','Café','Comida rápida']},MODA:{n:'Compras',iv:.16,ie:0,r:'D',c:['Ropa','Calzado','Electrónica']},VIAJES:{n:'Viajes',iv:.16,ie:0,r:'D',c:['Avión','Autobús','Carretera (Autopista/Cuota)','Carretera (Libre)','Hotel','Tour']},AHORRO_INV:{n:'Ahorro/Inv',iv:0,ie:0,r:'A',c:['Depósito','CETES','Fondo emerg.']},DEUDA_PAGO:{n:'Pago Deudas',iv:0,ie:0,r:'A',c:['Abono extra','Pago tarjeta','Pago préstamo']}};
 const FR={semanal:{l:'Semanal',m:.25},quincenal:{l:'Quincenal',m:.5},mensual:{l:'Mensual',m:1},bimestral:{l:'Bimestral',m:2},trimestral:{l:'Trimestral',m:3}};
 const EDU_CONCEPTS=['Colegiatura', 'Inscripción', 'Uniformes', 'Materiales/Libros', 'Trámites/Constancias', 'Titulación', 'Materias Extranjeras', 'Proyecto/Herramientas', 'Otro'];
 const INS=['BBVA','Mercado Pago','Nu','Santander','Efectivo'];
@@ -350,7 +356,7 @@ const getRefDate=()=>{const h=new Date();h.setHours(0,0,0,0);if(periodOffset===0
 const mp=f=>{if(!f)return false;if(cp==='todo')return true;const ref=getRefDate();const d=new Date(f+'T00:00:00');if(isNaN(d))return false;if(cp==='dia')return d.toDateString()===ref.toDateString();if(cp==='sem'){const s=new Date(ref);s.setDate(ref.getDate()-ref.getDay());const e=new Date(s);e.setDate(s.getDate()+6);return d>=s&&d<=e}if(cp==='mes')return d.getMonth()===ref.getMonth()&&d.getFullYear()===ref.getFullYear();if(cp==='año')return d.getFullYear()===ref.getFullYear();return true};
 const gmp=()=>D.m.filter(m=>mp(m.f));
 
-// ═══ DEMO DATA INJECTION
+// ═══ MASSIVE DEMO DATA INJECTION
 if(!D.m.length){
     const tNow = new Date();
     const dM = (moOffset, day) => {
@@ -428,22 +434,26 @@ if(!D.m.length){
     };
 
     D.m=[
-        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina',i:'BBVA Nómina',monto:20000,f:dM(-2,1)},
+        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina',i:'BBVA Nómina',monto:20000,neto:19000,vales:1000,bruto:24200,deds:{isr:3500,imss:700,fa:0,sa:0},f:dM(-2,1)},
         {id:uid(),t:'egreso',fam:'RENTA',c:'Renta',i:'BBVA Nómina',monto:8000,f:dM(-2,2)},
         {id:uid(),t:'egreso',fam:'DESPENSA',c:'Súper',i:'Nu — TdC',monto:3500,f:dM(-2,10)},
+        {id:uid(),t:'egreso',fam:'TRANSPORTE',c:'Particular - Gasolina',i:'BBVA Nómina',monto:900,f:dM(-2,12)},
         
-        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina',i:'BBVA Nómina',monto:20000,f:dM(-1,1)},
+        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina',i:'BBVA Nómina',monto:20000,neto:19000,vales:1000,bruto:24200,deds:{isr:3500,imss:700,fa:0,sa:0},f:dM(-1,1)},
         {id:uid(),t:'egreso',fam:'RENTA',c:'Renta',i:'BBVA Nómina',monto:8000,f:dM(-1,2)},
         {id:uid(),t:'egreso',fam:'DESPENSA',c:'Súper',i:'Nu — TdC',monto:4000,f:dM(-1,10)},
         {id:uid(),t:'egreso',fam:'AHORRO_INV',c:'Fondo Emergencia',i:'BBVA Nómina',monto:2000,f:dM(-1,16)},
+        {id:uid(),t:'egreso',fam:'TRANSPORTE',c:'Público - Va y Ven',i:'Efectivo',monto:200,f:dM(-1,18)},
         
-        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina (Mensual)',i:'BBVA Nómina',monto:22000,f:dM(0,1)},
+        {id:uid(),t:'ingreso',fam:'NOMINA',c:'Nómina (Mensual)',i:'BBVA Nómina',monto:22000,neto:21000,vales:1000,bruto:26500,deds:{isr:3600,imss:900,fa:0,sa:0},f:dM(0,1)},
         {id:uid(),t:'ingreso',fam:'EXTRA',c:'Venta de Bici',i:'Efectivo Cartera',monto:3000,f:dM(0,5)},
         
         {id:uid(),t:'egreso',fam:'RENTA',c:'Renta / Hipoteca',i:'BBVA Nómina',monto:8500,f:dM(0,2)},
         {id:uid(),t:'egreso',fam:'SERVICIOS',c:'Internet y Celular',i:'Nu — TdC',monto:1000,f:dM(0,3)},
         {id:uid(),t:'egreso',fam:'ALIMENTOS',c:'Mercado Central',i:'Efectivo Cartera',monto:1200,f:dM(0,6)},
         {id:uid(),t:'egreso',fam:'DESPENSA',c:'Walmart (Ticket)',i:'Nu — TdC',monto:2800,ivTicket:350,f:dM(0,9)}, 
+        {id:uid(),t:'egreso',fam:'TRANSPORTE',c:'Particular - Gasolina',i:'BBVA Nómina',monto:1100,f:dM(0,10)}, 
+        {id:uid(),t:'egreso',fam:'TRANSPORTE',c:'Público - Ie-tram',i:'Nu Cuenta',monto:150,f:dM(0,11)}, 
         
         // EDU EXPENSES FOR THE CHART
         {id:uid(),t:'egreso',fam:'EDUC_FAM',c:'Colegiatura',i:'BBVA Nómina',monto:4500,f:dM(-2,5), eduId: eduId},
@@ -452,21 +462,25 @@ if(!D.m.length){
         {id:uid(),t:'egreso',fam:'EDUC_FAM',c:'Materiales/Libros',i:'Amex',monto:1800,f:dM(-1,12), eduId: eduId},
         {id:uid(),t:'egreso',fam:'EDUC_FAM',c:'Trámites/Constancias',i:'Nu — TdC',monto:350,f:dM(0,1), eduId: eduId},
 
-        {id:uid(),t:'egreso',fam:'VIAJES',c:'Vuelos a Cancún',i:'Amex',monto:6500,f:dM(0,12)}, 
+        // DESEOS EXCESIVOS (Viajes y Moda)
+        {id:uid(),t:'egreso',fam:'VIAJES',c:'Avión',i:'Amex',monto:4500,f:dM(0,12)}, 
+        {id:uid(),t:'egreso',fam:'VIAJES',c:'Carretera (Autopista/Cuota)',i:'Amex',monto:850,f:dM(0,13)}, 
         {id:uid(),t:'egreso',fam:'MODA',c:'Tenis y Ropa',i:'Nu — TdC',monto:3800,f:dM(0,4)},
         {id:uid(),t:'egreso',fam:'ENTRET',c:'Boletos Concierto',i:'Nu — TdC',monto:2200,f:dM(0,14)},
 
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:150,f:dM(0,2)},
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:180,f:dM(0,4)},
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:200,f:dM(0,6)},
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:120,f:dM(0,8)},
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:300,f:dM(0,10)},
-        {id:uid(),t:'egreso',fam:'APP',c:'Uber Viaje',i:'Amex',monto:160,f:dM(0,15)},
+        // FUGAS / GASTOS HORMIGA (Apps de Movilidad y Restaurantes)
+        {id:uid(),t:'egreso',fam:'APP',c:'Uber',i:'Amex',monto:150,f:dM(0,2)},
+        {id:uid(),t:'egreso',fam:'APP',c:'DiDi',i:'Amex',monto:180,f:dM(0,4)},
+        {id:uid(),t:'egreso',fam:'APP',c:'InDrive',i:'Amex',monto:120,f:dM(0,6)},
+        {id:uid(),t:'egreso',fam:'APP',c:'Uber',i:'Amex',monto:120,f:dM(0,8)},
+        {id:uid(),t:'egreso',fam:'APP',c:'Rappi',i:'Amex',monto:300,f:dM(0,10)},
+        {id:uid(),t:'egreso',fam:'APP',c:'Uber',i:'Amex',monto:160,f:dM(0,15)},
         {id:uid(),t:'egreso',fam:'RESTAURANTES',c:'Starbucks Café',i:'Fondo Gastos',monto:95,f:dM(0,3)},
         {id:uid(),t:'egreso',fam:'RESTAURANTES',c:'Starbucks Café',i:'Fondo Gastos',monto:110,f:dM(0,5)},
         {id:uid(),t:'egreso',fam:'RESTAURANTES',c:'Starbucks Café',i:'Fondo Gastos',monto:85,f:dM(0,7)},
         {id:uid(),t:'egreso',fam:'RESTAURANTES',c:'Starbucks Café',i:'Fondo Gastos',monto:120,f:dM(0,11)},
 
+        // AHORRO / DEUDAS
         {id:uid(),t:'egreso',fam:'AHORRO_INV',c:'CETES Directo',i:'BBVA Nómina',monto:1000,f:dM(0,1)},
         {id:uid(),t:'egreso',fam:'DEUDA_PAGO',c:'Abono Nu',i:'BBVA Nómina',monto:1500,f:dt(-1)}, 
     ];
@@ -509,7 +523,7 @@ if(paidRecent.length)html+=`<div style="margin-top:4px;padding:6px 10px;backgrou
 document.getElementById('alerts').innerHTML=html};
 
 // ═══ TOP RENDERS
-const rSum=()=>{const mv=gmp(),ing=mv.filter(m=>m.t==='ingreso').reduce((s,m)=>s+Number(m.monto||0),0),gas=mv.filter(m=>m.t==='egreso').reduce((s,m)=>s+Number(m.monto||0),0),bal=ing-gas;document.getElementById('sum').innerHTML=`<div class="sc ${bal>=0?'pos':'neg'}"><label>Balance</label><div class="v">${fk(bal)}</div></div><div class="sc blu"><label>Ingresos</label><div class="v">${fk(ing)}</div></div><div class="sc"><label>Gastos</label><div class="v">${fk(gas)}</div></div><div class="sc pos"><label>Ahorrado</label><div class="v">${fk(D.ah.reduce((s,a)=>s+Number(a.s||0),0))}</div></div>`;const fi=calcFi(),recT=D.rc.filter(r=>r.act).reduce((s,r)=>s+Number(r.monto||0),0);document.getElementById('fis').innerHTML=`<div class="fc"><label>ISR+IMSS</label><div class="v">$${fm(fi.isr)}</div></div><div class="fc"><label>IVA</label><div class="v">$${fm(fi.iva)}</div></div><div class="fc"><label>IEPS</label><div class="v">$${fm(fi.ieps)}</div></div><div class="fc"><label>Contrib.</label><div class="v">$${fm(fi.contrib||0)}</div></div><div class="fc"><label>Total fiscal</label><div class="v">$${fm(fi.tot)}</div><div class="sub">${(fi.pct||0).toFixed(1)}%</div></div><div class="fc rec"><label>Recurrentes (${D.rc.filter(r=>r.act).length})</label><div class="v">$${fm(recT)}</div></div>`;
+const rSum=()=>{const mv=gmp(),ing=mv.filter(m=>m.t==='ingreso').reduce((s,m)=>s+Number(m.monto||0),0),gas=mv.filter(m=>m.t==='egreso').reduce((s,m)=>s+Number(m.monto||0),0),bal=ing-gas;const fi=calcFi(),recT=D.rc.filter(r=>r.act).reduce((s,r)=>s+Number(r.monto||0),0);document.getElementById('sum').innerHTML=`<div class="sc ${bal>=0?'pos':'neg'}"><label>Balance</label><div class="v">${fk(bal)}</div></div><div class="sc blu"><label>Ingreso Neto</label><div class="v">${fk(ing)}</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Bruto: ${fk(fi.bruto)}</div></div><div class="sc"><label>Gastos</label><div class="v">${fk(gas)}</div></div><div class="sc pos"><label>Ahorrado</label><div class="v">${fk(D.ah.reduce((s,a)=>s+Number(a.s||0),0))}</div></div>`;document.getElementById('fis').innerHTML=`<div class="fc"><label>ISR+IMSS</label><div class="v">$${fm(fi.isr)}</div></div><div class="fc"><label>IVA</label><div class="v">$${fm(fi.iva)}</div></div><div class="fc"><label>IEPS</label><div class="v">$${fm(fi.ieps)}</div></div><div class="fc"><label>Contrib.</label><div class="v">$${fm(fi.contrib||0)}</div></div><div class="fc"><label>Total fiscal</label><div class="v">$${fm(fi.tot)}</div><div class="sub">${(fi.pct||0).toFixed(1)}%</div></div><div class="fc rec"><label>Recurrentes (${D.rc.filter(r=>r.act).length})</label><div class="v">$${fm(recT)}</div></div>`;
   const inegiEl = document.getElementById('inegi-card');
   if(inegiEl) {
       let clase = 'Clase Baja';
@@ -572,7 +586,7 @@ const bFIn=()=>{const el=document.getElementById('f-in');if(!el)return;const cfg
 const frBtns=Object.entries(NOM_FR).map(([k,v])=>`<button class="qb${cfg.frecPago===k?' on':''}" onclick="D.nomCfg.frecPago='${k}';sv();bFIn()">${v}</button>`).join('');
 const isMensual=cfg.frecPago==='mensual';const showDeds=isMensual||cNQ==='Q2'||cfg.dedsEnCada;
 const io=allINS().map(i=>`<option${i===cI?' selected':''}>${i}</option>`).join('');
-el.innerHTML=`<div style="font-size:9px;color:var(--t3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Frecuencia de pago</div><div class="qbs">${frBtns}</div>${!isMensual?`<div class="qbs"><button class="qb${cNQ==='Q1'?' on':''}" onclick="cNQ='Q1';bFIn()">${cfg.frecPago==='quincenal'?'Quincena 1':'Semana actual'}</button><button class="qb${cNQ==='Q2'?' on':''}" onclick="cNQ='Q2';bFIn()">${cfg.frecPago==='quincenal'?'Quincena 2 (cierre)':'Última sem. mes'}</button></div>`:''}<div class="fg3"><div class="fld"><label>Sueldo en cuenta ($)</label><input id="n-n" type="number" step="0.01"></div><div class="fld"><label>Vales ($)</label><input id="n-v" type="number" step="0.01" value="0"></div><div class="fld"><label>Cuenta Destino</label><select id="n-i" onchange="if(this.value==='Otra...'){const v=prompt('Nombre de la cuenta destino:');if(v){D.cInst.push(v);cI=v;sv();bFIn()}}else{cI=this.value}">${io}</select></div></div>${!isMensual?`<div class="tog-r" onclick="D.nomCfg.dedsEnCada=!D.nomCfg.dedsEnCada;sv();bFIn()"><div class="tog${cfg.dedsEnCada?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px">Retenciones en cada pago</span></div>`:``}${showDeds?`<div class="ded"><div class="ded-t">Retenciones${cfg.dedsEnCada&&!isMensual?' (cada '+NOM_FR[cfg.frecPago].toLowerCase()+')':isMensual?' del mes':' del cierre'}</div><div class="fg2"><div class="fld"><label>ISR</label><input id="n-isr" type="number" step="0.01"></div><div class="fld"><label>Régimen</label><select id="n-reg" onchange="D.nomCfg.regimen=this.value;sv();bFIn()"><option value="IMSS"${cfg.regimen==='IMSS'?' selected':''}>IMSS</option><option value="ISSSTE"${cfg.regimen==='ISSSTE'?' selected':''}>ISSSTE</option></select></div><div class="fld"><label>Cuota ${cfg.regimen}</label><input id="n-imss" type="number" step="0.01"></div><div class="fld"><label>F. Ahorro</label><input id="n-fa" type="number" step="0.01"></div><div class="fld"><label>Seg. Auto</label><input id="n-sa" type="number" step="0.01"></div></div><div class="tog-r" style="margin-top:4px" onclick="D.nomCfg.segVida=!D.nomCfg.segVida;sv();bFIn()"><div class="tog${cfg.segVida?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px">Seguro de vida</span></div>${cfg.segVida?`<div class="fld"><label>Seguro vida ($)</label><input id="n-sv" type="number" step="0.01"></div>`:''}</div>`:``}<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="${td()}"></div><button class="bg2" onclick="sNom()">+ Registrar nómina</button>`};
+el.innerHTML=`<div style="font-size:9px;color:var(--t3);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px">Frecuencia de pago</div><div class="qbs">${frBtns}</div>${!isMensual?`<div class="qbs"><button class="qb${cNQ==='Q1'?' on':''}" onclick="cNQ='Q1';bFIn()">${cfg.frecPago==='quincenal'?'Quincena 1':'Semana actual'}</button><button class="qb${cNQ==='Q2'?' on':''}" onclick="cNQ='Q2';bFIn()">${cfg.frecPago==='quincenal'?'Quincena 2 (cierre)':'Última sem. mes'}</button></div>`:''}<div class="fg3"><div class="fld"><label>Sueldo Neto ($)</label><input id="n-n" type="number" step="0.01" placeholder="Lo que llega a cuenta"></div><div class="fld"><label>Vales ($)</label><input id="n-v" type="number" step="0.01" value="0"></div><div class="fld"><label>Cuenta Destino</label><select id="n-i" onchange="if(this.value==='Otra...'){const v=prompt('Nombre de la cuenta destino:');if(v){D.cInst.push(v);cI=v;sv();bFIn()}}else{cI=this.value}">${io}</select></div></div>${!isMensual?`<div class="tog-r" onclick="D.nomCfg.dedsEnCada=!D.nomCfg.dedsEnCada;sv();bFIn()"><div class="tog${cfg.dedsEnCada?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px">Retenciones en cada pago</span></div>`:``}${showDeds?`<div class="ded"><div class="ded-t">Retenciones para Cálculo Bruto${cfg.dedsEnCada&&!isMensual?' (cada '+NOM_FR[cfg.frecPago].toLowerCase()+')':isMensual?' del mes':' del cierre'}</div><div class="fg2"><div class="fld"><label>ISR</label><input id="n-isr" type="number" step="0.01"></div><div class="fld"><label>Régimen</label><select id="n-reg" onchange="D.nomCfg.regimen=this.value;sv();bFIn()"><option value="IMSS"${cfg.regimen==='IMSS'?' selected':''}>IMSS</option><option value="ISSSTE"${cfg.regimen==='ISSSTE'?' selected':''}>ISSSTE</option></select></div><div class="fld"><label>Cuota ${cfg.regimen}</label><input id="n-imss" type="number" step="0.01"></div><div class="fld"><label>F. Ahorro</label><input id="n-fa" type="number" step="0.01"></div><div class="fld"><label>Seg. Auto</label><input id="n-sa" type="number" step="0.01"></div></div><div class="tog-r" style="margin-top:4px" onclick="D.nomCfg.segVida=!D.nomCfg.segVida;sv();bFIn()"><div class="tog${cfg.segVida?' on':''}"><div class="tog-d"></div></div><span style="font-size:10px">Seguro de vida</span></div>${cfg.segVida?`<div class="fld"><label>Seguro vida ($)</label><input id="n-sv" type="number" step="0.01"></div>`:''}</div>`:``}<div class="fld"><label>Fecha</label><input id="n-f" type="date" value="${td()}"></div><button class="bg2" onclick="sNom()">+ Registrar nómina</button>`};
 
 const sFt=(k,el)=>{curFTab=k;document.querySelectorAll('.ft').forEach(b=>b.classList.remove('on'));el.classList.add('on');['eg','in','ex'].forEach(id=>{const e=document.getElementById('f-'+id);if(e)e.style.display=id===k?'block':'none'})};
 const sM=()=>{const m=parseFloat(document.getElementById('inp-m')?.value||0),f=document.getElementById('inp-f')?.value;if(!m||!f){alert('Monto y fecha');return}const c=document.getElementById('sl-c')?.value||cC;let i=document.getElementById('sl-i')?.value||cI;if(i==='Otra...'){i=cI;}const cat=allCats()[cFam]||CATS[cFam]||{iv:0,ie:0};const sub=m/(1+(cat.iv||0)+(cat.ie||0)),p=document.getElementById('inp-p'),ivt=parseFloat(document.getElementById('inp-ivt')?.value||0);
@@ -1065,12 +1079,12 @@ const pctGasto=(gF/ig*100).toFixed(1),pctLibre=(lb/ig*100).toFixed(1);
 let ok,pm=0,msg,detail;
 if(t==='c'){
   ok=lb>=c-e;const neto=c-e;
-  if(ok){msg=`✅ VIABLE de contado`;detail=`Tu ingreso es $${fm(ig)}. Después de tus gastos del periodo ($${fm(gF)} = ${pctGasto}% del ingreso), te sobran <b>$${fm(lb)}</b> (${pctLibre}%). El costo neto de "${dd}" es $${fm(neto)}${e>0?' (ya descontando enganche de $'+fm(e)+')':''}. Como $${fm(lb)} ≥ $${fm(neto)}, <b>sí puedes comprarlo</b>. Te quedarían $${fm(lb-neto)} después de la compra.`}
-  else{msg=`❌ NO VIABLE de contado`;detail=`Tu ingreso es $${fm(ig)}. Gastas $${fm(gF)} (${pctGasto}%), te quedan <b>$${fm(lb)}</b>. Necesitas $${fm(neto)} para "${dd}"${e>0?' (con enganche de $'+fm(e)+')':''} pero te faltan <b>$${fm(neto-lb)}</b>. Necesitarías aumentar tus ingresos o reducir $${fm(neto-lb)} en gastos. Distribuido: $${fm(gN)} necesidades, $${fm(gD)} deseos, $${fm(gA)} ahorro.`}
+  if(ok){msg=`✅ VIABLE de contado`;detail=`Tu ingreso neto es $${fm(ig)}. Después de tus gastos del periodo ($${fm(gF)} = ${pctGasto}% del ingreso neto), te sobran <b>$${fm(lb)}</b> (${pctLibre}%). El costo neto de "${dd}" es $${fm(neto)}${e>0?' (ya descontando enganche de $'+fm(e)+')':''}. Como $${fm(lb)} ≥ $${fm(neto)}, <b>sí puedes comprarlo</b>. Te quedarían $${fm(lb-neto)} después de la compra.`}
+  else{msg=`❌ NO VIABLE de contado`;detail=`Tu ingreso neto es $${fm(ig)}. Gastas $${fm(gF)} (${pctGasto}%), te quedan <b>$${fm(lb)}</b>. Necesitas $${fm(neto)} para "${dd}"${e>0?' (con enganche de $'+fm(e)+')':''} pero te faltan <b>$${fm(neto-lb)}</b>. Necesitarías aumentar tus ingresos netos o reducir $${fm(neto-lb)} en gastos. Distribuido: $${fm(gN)} necesidades, $${fm(gD)} deseos, $${fm(gA)} ahorro.`}
 }else{
   pm=(c-e)/ms;ok=lb>=pm;
-  if(ok){msg=`✅ VIABLE a ${ms} MSI`;detail=`Tu ingreso es $${fm(ig)}. Después de gastos ($${fm(gF)} = ${pctGasto}%), te sobran <b>$${fm(lb)}</b>/periodo. "${dd}" cuesta $${fm(c)}${e>0?' menos enganche $'+fm(e):''}. A ${ms} meses pagarías <b>$${fm(pm)}/mes</b>. Como $${fm(lb)} ≥ $${fm(pm)}, <b>sí puedes pagarlo</b>. Te quedarían $${fm(lb-pm)} libres cada periodo. Eso es el ${((lb-pm)/ig*100).toFixed(1)}% de tu ingreso.`}
-  else{msg=`❌ NO VIABLE a ${ms} MSI`;detail=`Tu ingreso es $${fm(ig)}. Gastas $${fm(gF)} (${pctGasto}%), sobran <b>$${fm(lb)}</b>. "${dd}" requiere $${fm(pm)}/mes a ${ms} meses, pero solo tienes $${fm(lb)} libres. <b>Faltan $${fm(pm-lb)}/mes</b>. Opciones: aumentar MSI a ${Math.ceil((c-e)/lb)} meses ($${fm(lb)}/mes), dar enganche de $${fm(Math.max(c-lb*ms,0))}, o reducir gastos de deseos ($${fm(gD)}) en $${fm(pm-lb)}.`}
+  if(ok){msg=`✅ VIABLE a ${ms} MSI`;detail=`Tu ingreso neto es $${fm(ig)}. Después de gastos ($${fm(gF)} = ${pctGasto}%), te sobran <b>$${fm(lb)}</b>/periodo. "${dd}" cuesta $${fm(c)}${e>0?' menos enganche $'+fm(e):''}. A ${ms} meses pagarías <b>$${fm(pm)}/mes</b>. Como $${fm(lb)} ≥ $${fm(pm)}, <b>sí puedes pagarlo</b>. Te quedarían $${fm(lb-pm)} libres cada periodo. Eso es el ${((lb-pm)/ig*100).toFixed(1)}% de tu ingreso neto.`}
+  else{msg=`❌ NO VIABLE a ${ms} MSI`;detail=`Tu ingreso neto es $${fm(ig)}. Gastas $${fm(gF)} (${pctGasto}%), sobran <b>$${fm(lb)}</b>. "${dd}" requiere $${fm(pm)}/mes a ${ms} meses, pero solo tienes $${fm(lb)} libres. <b>Faltan $${fm(pm-lb)}/mes</b>. Opciones: aumentar MSI a ${Math.ceil((c-e)/lb)} meses ($${fm(lb)}/mes), dar enganche de $${fm(Math.max(c-lb*ms,0))}, o reducir gastos de deseos ($${fm(gD)}) en $${fm(pm-lb)}.`}
 }
 window._tmpFut={d:dd.replace(/'/g,''),c,ms,e,t,ok,pm,msg,detail};
 document.getElementById('ft-r').innerHTML=`<div class="proj ${ok?'ok':'bad'}"><div style="font-weight:700;font-size:13px;margin-bottom:4px">${msg}</div><div style="font-size:10px;line-height:1.5">${detail}</div><button class="bge bsm" style="margin-top:6px" onclick="window._tmpFut.id=uid();D.fut.push(window._tmpFut);sv();rFut()">💾 Guardar simulación</button></div>`};
@@ -1483,74 +1497,6 @@ ${segs.map((sg,i)=>{
 </div></div></details>
 </div>`;
 };
-
-const addVeh=()=>{const tp=document.getElementById('vh-tp')?.value||'auto',mk=document.getElementById('vh-mk')?.value?.trim()||'',nm=document.getElementById('vh-nm')?.value?.trim()||'';if(!mk){alert('Ingresa la marca');return}D.vehs.push({id:uid(),nombre:nm||mk,tipo:tp,marca:mk,licencias:[],placas:[],tarjCirc:[],seguros:[]});sv();rVeh()};
-const addVehLic=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vla-tp-'+vid)?.value||'Automovilista',tt=document.getElementById('vla-tt-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vla-co-'+vid)?.value||0),fv=document.getElementById('vla-fv-'+vid)?.value||'',rc=document.getElementById('vla-rc-'+vid)?.checked||false,pe=document.getElementById('vla-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.licencias.push({id:uid(),tipo:tp,titular:tt,costo:co,fPago:td(),fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-const addVehPlaca=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vpa-tp-'+vid)?.value||'Particular',es=document.getElementById('vpa-es-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vpa-co-'+vid)?.value||0),fp=document.getElementById('vpa-fp-'+vid)?.value||td(),rc=document.getElementById('vpa-rc-'+vid)?.checked||false,pe=document.getElementById('vpa-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.placas.push({id:uid(),tipo:tp,estado:es,costo:co,fPago:fp,rec:rc,periodo:pe});sv();rVeh()};
-const addVehTC=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const co=parseFloat(document.getElementById('vtca-co-'+vid)?.value||0),fp=document.getElementById('vtca-fp-'+vid)?.value||td(),fv=document.getElementById('vtca-fv-'+vid)?.value||'',rc=document.getElementById('vtca-rc-'+vid)?.checked!==false,pe=document.getElementById('vtca-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.tarjCirc.push({id:uid(),costo:co,fPago:fp,fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
-const addVehSeg=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;let aseg=document.getElementById('vsa-as-'+vid)?.value||'';if(aseg==='Otra...'){aseg=prompt('Nombre de la aseguradora:');if(!aseg)return}const cb=document.getElementById('vsa-cb-'+vid)?.value||'Amplia',co=parseFloat(document.getElementById('vsa-co-'+vid)?.value||0),pl=document.getElementById('vsa-pl-'+vid)?.value||'Anual',fp=document.getElementById('vsa-fp-'+vid)?.value||td(),fv=document.getElementById('vsa-fv-'+vid)?.value||'',po=document.getElementById('vsa-po-'+vid)?.value?.trim()||'',no=document.getElementById('vsa-no-'+vid)?.value?.trim()||'';if(!co){alert('Ingresa costo');return}v.seguros.push({id:uid(),aseguradora:aseg,tipoCobertura:cb,costo:co,plazo:pl,fPago:fp,fVence:fv,poliza:po,notas:no});sv();rVeh()};
-const updVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr]||!v[arr][idx])return;const prefixes={licencias:'vl',placas:'vp',tarjCirc:'vtc',seguros:'vs'};const el=document.getElementById(prefixes[arr]+'-'+vid+'-'+idx);if(!el)return;const ns=parseFloat(el.value);if(isNaN(ns)||ns<=0){alert('Ingresa monto válido');return}v[arr][idx].costo=ns;sv();rVeh()};
-const delVehItem=(vid,arr,idx)=>{const v=D.vehs.find(x=>x.id===vid);if(!v||!v[arr])return;v[arr].splice(idx,1);sv();rVeh()};
-
-// ═══ IMPUESTOS / CONTRIBUCIONES ══════════════════════════════════════════════
-const IMP_TIPOS=['Tenencia','Predial','Recolección de basura','Derecho de agua','Alumbrado público','Impuesto cedular','ISH (hospedaje)','ISAN (auto nuevo)','Derechos vehiculares','Contribución de mejora','Multa fiscal','Otro'];
-const IMP_PER={mensual:'Mensual',bimestral:'Bimestral',trimestral:'Trimestral',semestral:'Semestral',anual:'Anual',bianual:'Cada 2 años',unico:'Pago único'};
-
-const impTotal=()=>(D.impuestos||[]).reduce((s,i)=>s+Number(i.costo||0),0);
-
-const rImp=()=>{
-if(!D.impuestos)D.impuestos=[];
-const tImp=impTotal();
-const recImp=D.impuestos.filter(i=>i.rec);
-const vigentes=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd===null||dd>=0});
-const vencidos=D.impuestos.filter(i=>{const dd=df(i.fFin);return dd!==null&&dd<0});
-
-document.getElementById('p-imp').innerHTML=`
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px">
-  <div class="sc neg"><label>Total contribuciones</label><div class="v">$${fm(tImp)}</div></div>
-  <div class="sc"><label>Vigentes</label><div class="v">${vigentes.length}</div></div>
-  <div class="sc" style="${vencidos.length?'border-color:#fca5a5':''}"><label>Vencidos</label><div class="v" style="color:${vencidos.length?'var(--red)':'var(--t1)'}">${vencidos.length}</div></div>
-  <div class="sc blu"><label>Recurrentes</label><div class="v">${recImp.length}</div></div>
-</div>
-
-<div class="pnl"><h3>Registrar impuesto / contribución</h3>
-<p style="font-size:10px;color:var(--t3);margin-bottom:6px">Tenencia, predial, basura, alumbrado, derechos de agua y cualquier otro impuesto o contribución que pagues para vivir.</p>
-<div class="fg3">
-  <div class="fld"><label>Tipo de impuesto</label><select id="imp-tp">${IMP_TIPOS.map(t=>`<option>${t}</option>`).join('')}</select></div>
-  <div class="fld"><label>Descripción</label><input id="imp-desc" placeholder="Ej: Predial casa, Tenencia Versa 2024..."></div>
-  <div class="fld"><label>Costo ($)</label><input id="imp-co" type="number" step="0.01"></div>
-</div>
-<div class="fg4">
-  <div class="fld"><label>Fecha de pago</label><input id="imp-fp" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia inicio</label><input id="imp-fi" type="date" value="${td()}"></div>
-  <div class="fld"><label>Vigencia fin</label><input id="imp-ff" type="date"></div>
-  <div class="fld"><label>Periodo</label><select id="imp-pe">${Object.entries(IMP_PER).map(([k,v])=>`<option value="${k}">${v}</option>`).join('')}</select></div>
-</div>
-<div class="fg2">
-  <div class="tog-r" onclick="document.getElementById('imp-rc').checked=!document.getElementById('imp-rc').checked"><input type="checkbox" id="imp-rc" style="width:auto" checked> <span style="font-size:10px;font-weight:500">Recurrente (se volverá a cobrar)</span></div>
-  <div class="fld"><label>Notas</label><input id="imp-no" placeholder="Opcional"></div>
-</div>
-<button class="bp" style="margin-top:4px" onclick="addImp()">+ Registrar impuesto</button>
-</div>
-
-<div class="cg" style="margin-top:6px">${D.impuestos.map((imp,i)=>{
-  const ddF=df(imp.fFin);const venc=ddF!==null&&ddF<0;const prox=ddF!==null&&ddF<=30&&ddF>=0;
-  return`<div class="crd" style="${venc?'border-color:#fca5a5;background:var(--redbg)':prox?'border-color:var(--amber);background:var(--amberbg)':''}">
-  <div class="crd-h"><div>
-    <div style="display:flex;gap:3px;flex-wrap:margin-bottom:2px">
-      <span class="badge b-am">${imp.tipo}</span>
-      ${imp.rec?`<span class="badge b-pu">↻ ${IMP_PER[imp.periodo]||imp.periodo}</span>`:'<span class="badge b-gy">Único</span>'}
-      ${venc?'<span class="badge b-re">Vencido</span>':prox?`<span class="badge b-am">${ddF}d</span>`:'<span class="badge b-gr">Vigente</span>'}
-    </div>
-    <div class="crd-t">${imp.desc||imp.tipo}</div>
-    <div style="font-size:9px;color:var(--t3)">Pagado: ${fDate(imp.fPago)} · ${imp.fInicio?'Desde '+fDate(imp.fInicio):''} ${imp.fFin?'→ '+fDate(imp.fFin):''}</div>
-  </div>
-  <button class="bre bsm" onclick="D.impuestos.splice(${i},1);sv();rImp()">✕</button></div>
-  <div class="crd-v" style="color:var(--red)">$${fm(imp.costo)}</div>
-  ${imp.notas?`<div style="font-size:9px;color:var(--t3);margin-top:2px">${imp.notas}</div>`:''}
-  <div class="crd-f"><input id="ui-${i}" type="number" step="0.01" placeholder="Actualizar $"><button class="bge bsm" onclick="updImp(${i})">✓</button></div>
-</div>`}).join('')||'<div class="empty">Sin impuestos registrados.</div>'}</div>
-`};
 
 const addImp=()=>{const tp=document.getElementById('imp-tp')?.value||'Otro',desc=document.getElementById('imp-desc')?.value?.trim()||'',co=parseFloat(document.getElementById('imp-co')?.value||0),fp=document.getElementById('imp-fp')?.value||td(),fi2=document.getElementById('imp-fi')?.value||'',ff=document.getElementById('imp-ff')?.value||'',pe=document.getElementById('imp-pe')?.value||'anual',rc=document.getElementById('imp-rc')?.checked!==false,no=document.getElementById('imp-no')?.value?.trim()||'';if(!co){alert('Ingresa costo');return}D.impuestos.push({id:uid(),tipo:tp,desc:desc||tp,costo:co,fPago:fp,fInicio:fi2,fFin:ff,periodo:pe,rec:rc,notas:no});sv();rImp();rAll()};
 
