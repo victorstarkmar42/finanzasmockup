@@ -1004,6 +1004,8 @@ ${segs.map((sg,i)=>{
 </div>`;
 };
 
+const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d2<0)return'<span class="badge b-re">Vencido</span>';if(d2<=30)return`<span class="badge b-am">${d2}d</span>`;return''};
+
 const addVeh=()=>{const tp=document.getElementById('vh-tp')?.value||'auto',mk=document.getElementById('vh-mk')?.value?.trim()||'',nm=document.getElementById('vh-nm')?.value?.trim()||'';if(!mk){alert('Ingresa la marca');return}D.vehs.push({id:uid(),nombre:nm||mk,tipo:tp,marca:mk,licencias:[],placas:[],tarjCirc:[],seguros:[]});sv();rVeh()};
 
 const addVehLic=(vid)=>{const v=D.vehs.find(x=>x.id===vid);if(!v)return;const tp=document.getElementById('vla-tp-'+vid)?.value||'Automovilista',tt=document.getElementById('vla-tt-'+vid)?.value?.trim()||'',co=parseFloat(document.getElementById('vla-co-'+vid)?.value||0),fv=document.getElementById('vla-fv-'+vid)?.value||'',rc=document.getElementById('vla-rc-'+vid)?.checked||false,pe=document.getElementById('vla-pe-'+vid)?.value||'anual';if(!co){alert('Ingresa costo');return}v.licencias.push({id:uid(),tipo:tp,titular:tt,costo:co,fPago:td(),fVence:fv,rec:rc,periodo:pe});sv();rVeh()};
