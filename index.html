@@ -206,9 +206,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 .acct-tag{font-size:8px;display:inline-block;padding:1px 5px;border-radius:4px;margin-top:2px}
 .acct-bal{font-size:20px;font-weight:700;margin:4px 0;font-variant-numeric:tabular-nums;color:var(--blue)}
 .xfer-box{background:var(--bg);border-radius:8px;padding:8px;margin-top:6px}
-.liquid-total{background:linear-gradient(135deg,var(--bluebg),var(--card));border:1px solid var(--blue);border-radius:var(--rl);padding:14px;margin-bottom:8px;text-align:center}
+.liquid-total{background:linear-gradient(135deg,var(--bluebg),var(--card));border:1px solid var(--blue);border-radius:var(--rl);padding:14px;margin-bottom:8px;text-align:center;word-break:break-word}
 .liquid-total label{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px}
 .liquid-total .v{font-size:28px;font-weight:700;color:var(--blue)}
+@media(max-width:480px){.liquid-total{padding:10px;margin-bottom:6px}.liquid-total .v{font-size:20px}}
 /* MODAL TARJETA */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;animation:fadeIn 0.2s ease}
 .modal-overlay.show{display:flex}
@@ -248,6 +249,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
   .d3,.fg2,.fg3,.fg4{grid-template-columns:1fr}
   .cg,.acct-grid{grid-template-columns:1fr}
   .sc{min-width:unset !important}
+  .sc .v{font-size:18px}
 }
 </style>
 </head>
