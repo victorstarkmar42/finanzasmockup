@@ -15,18 +15,6 @@ const initTheme = () => {
     }
 };
 initTheme();
-
-// Pre-cargar módulo guardado antes de renderizar para evitar flash
-(function() {
-    const savedModule = localStorage.getItem('f360_activeModule') || 'h';
-    const moduleIds = ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'];
-    const hiddenModules = moduleIds.filter(m => m !== savedModule).map(m => `#p-${m}`).join(', ');
-    if (hiddenModules) {
-        const style = document.createElement('style');
-        style.textContent = `${hiddenModules} { display: none !important; }`;
-        document.head.appendChild(style);
-    }
-})();
 </script>
 <style>
 /* TEMA CLARO (Por defecto) */
@@ -395,20 +383,24 @@ window.addEventListener('DOMContentLoaded', () => {
         Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--t2').trim();
     }
     
-    // Restaurar módulo activo guardado INMEDIATAMENTE
+    // Restaurar módulo activo guardado
     const savedModule = localStorage.getItem('f360_activeModule') || 'h';
-    ct = savedModule;
-    const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => {
+    if(savedModule !== 'h') {
+        ct = savedModule;
+        // Restaurar módulos sin delay
         const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
-        return b.innerText.includes(moduleMap[savedModule] || 'Dashboard');
-    });
-    if(moduleBtn) moduleBtn.classList.add('on');
-    
-    // Mostrar solo el módulo guardado desde el inicio
-    ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k=>{
-        const e=document.getElementById('p-'+k);
-        if(e) e.classList.toggle('vis', k===savedModule);
-    });
+        const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => 
+            b.innerText.includes(moduleMap[savedModule] || 'Dashboard')
+        );
+        if(moduleBtn) {
+            document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
+            moduleBtn.classList.add('on');
+            ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k => {
+                const e = document.getElementById('p-'+k);
+                if(e) e.classList.toggle('vis', k === savedModule);
+            });
+        }
+    }
 });
 
 const APP_VER = '12.6.0';
