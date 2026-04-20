@@ -2103,6 +2103,7 @@ const deleteImp=idx=>{if(!D.impuestos||!D.impuestos[idx])return; if(!confirm('¿
 const ST=(t,el)=>{
   ct=t;
   localStorage.setItem('f360_activeModule', t);
+  document.documentElement.setAttribute('data-mod', t);
   ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k=>{
       const e=document.getElementById('p-'+k);
       if(e)e.classList.toggle('vis',k===t);
