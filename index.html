@@ -19,9 +19,14 @@ const initTheme = () => {
 };
 initTheme();
 
-// BLOQUEAR VISUALIZACIÓN hasta que todo esté listo
-document.write('<style>body { opacity: 0 !important; } body.ready { opacity: 1 !important; transition: none !important; }</style>');
-window.moduleReady = () => { requestAnimationFrame(() => { document.body.classList.add('ready'); }); };
+// Precargar módulo correcto DESDE EL INICIO - inyectar CSS antes de renderizar
+(function() {
+    const saved = localStorage.getItem('f360_activeModule') || 'h';
+    if (saved !== 'h') {
+        // Inyectar CSS para ocultar módulos incorrectos desde el inicio
+        document.write(`<style>#p-h,#p-g,#p-fam,#p-a,#p-d,#p-r,#p-f,#p-p,#p-b,#p-v,#p-imp,#p-cfg{display:none!important}#p-${saved}{display:block!important}</style>`);
+    }
+})();
 </script>
 <style>
 /* TEMA CLARO (Por defecto) */
@@ -51,7 +56,6 @@ html.dark {
 
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased; transition: background-color 0.3s, color 0.3s;}
-body.ready { opacity: 1 !important; }
 input,select,button{font-family:inherit;font-size:12px;outline:none}
 input,select{padding:7px 9px;border:1px solid var(--brd);border-radius:8px;background:var(--inp-bg);color:var(--t1);transition:border .15s, background-color 0.3s, color 0.3s;width:100%}
 input:focus,select:focus{border-color:var(--blue)}
@@ -411,10 +415,7 @@ window.addEventListener('DOMContentLoaded', () => {
         moduleBtn.classList.add('on');
     }
     
-    // ✅ MOSTRAR PÁGINA INMEDIATAMENTE - módulo ya está listo visualmente
-    moduleReady();
-    
-    // Renderizar contenido en background
+    // Renderizar contenido del módulo
     rAll();
 });
 
