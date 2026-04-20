@@ -15,6 +15,20 @@ const initTheme = () => {
     }
 };
 initTheme();
+
+// Pre-cargar módulo guardado ANTES de renderizar - esto evita el flash visual
+(function() {
+    const savedModule = localStorage.getItem('f360_activeModule') || 'h';
+    if (savedModule !== 'h') {
+        // Crear style inmediatamente para ocultar otros módulos
+        const style = document.createElement('style');
+        style.textContent = `
+            .mod { display: none !important; }
+            #p-${savedModule} { display: block !important; }
+        `;
+        document.head.appendChild(style);
+    }
+})();
 </script>
 <style>
 /* TEMA CLARO (Por defecto) */
