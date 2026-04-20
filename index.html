@@ -372,7 +372,8 @@ const CIBER_TIPS = [
     "<b>Man-in-the-Middle (Ataques en redes Wi-Fi públicas) (4%):</b> Nunca abras la app de tu banco ni realices compras online conectado a redes Wi-Fi públicas o de hoteles sin usar una VPN.",
     "<b>Montadeudas (Ataque emergente en LATAM):</b> Evita apps de préstamos rápidos no reguladas (SIPRES). Hackean tu libreta de contactos y galería para extorsionarte.",
     "<b>Carding (Fraude con tarjetas clonadas):</b> Usa tarjetas digitales con CVV dinámico que expira en 5 minutos para compras en línea. Nunca uses tu tarjeta física en sitios web dudosos.",
-    "<b>Estafas en WhatsApp (Secuestro de cuentas):</b> Nadie te regalará dinero por WhatsApp. Si un familiar te pide una transferencia urgente desde un número nuevo, llámale por teléfono para verificar."
+    "<b>Estafas en WhatsApp (Secuestro de cuentas):</b> Nadie te regalará dinero por WhatsApp. Si un familiar te pide una transferencia urgente desde un número nuevo, llámale por teléfono para verificar.",
+    "<b>Brechas de Datos en Servicios Críticos (Supply Chain Attacks):</b> Cuando Vercel, GitHub, AWS, Twilio o plataformas de gobierno sufren brechas, tus credenciales se ven comprometidas. Si usabas la misma contraseña en tu banco, cámbiala INMEDIATAMENTE. Revisa Buró de Crédito, activa 2FA en todas tus cuentas financieras y monitorea movimientos por 6 meses."
 ];
 
 // NUEVO: Catálogo de amenazas activas de máxima prioridad
@@ -381,6 +382,12 @@ const ACTIVE_THREATS = [
         id: 'janelarat', 
         title: 'NUEVA AMENAZA LATAM: Virus JanelaRAT', 
         desc: 'Trojano bancario activo enfocado en usuarios de Latinoamérica. Se oculta en archivos ZIP/PDF falsos (supuestas facturas) y roba credenciales bancarias tomando control de tu pantalla. <b>No descargues ni abras comprobantes fiscales de correos desconocidos.</b>', 
+        severity: 'CRÍTICA' 
+    },
+    { 
+        id: 'supply-chain-breach', 
+        title: '🚨 ALERTA: Brechas de Datos en Servicios Críticos', 
+        desc: 'Cuando plataformas como Vercel, GitHub, AWS, Twilio o sistemas de gobierno sufren brechas, tus datos de acceso se ven comprometidos. <b>Acciones inmediatas:</b> (1) Cambia contraseñas en TODOS tus bancos si las usabas en estas plataformas. (2) Activa 2FA en apps financieras. (3) Revisa tu reporte de crédito en Buró de Crédito (Mexico) o equivalente. (4) Monitorea tus cuentas bancarias por 6 meses. (5) Si recibiste notificación de brecha, NO hagas clic en links de recuperación - llama directo al banco.', 
         severity: 'CRÍTICA' 
     }
 ];
