@@ -20,7 +20,7 @@ const initTheme = () => {
 initTheme();
 
 // BLOQUEAR VISUALIZACIÓN hasta que todo esté listo
-document.write('<style>body { opacity: 0 !important; } body.ready { opacity: 1 !important; transition: opacity 0.1s ease !important; }</style>');
+document.write('<style>body { opacity: 0 !important; } body.ready { opacity: 1 !important; transition: none !important; }</style>');
 window.moduleReady = () => { requestAnimationFrame(() => { document.body.classList.add('ready'); }); };
 </script>
 <style>
