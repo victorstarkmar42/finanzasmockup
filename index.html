@@ -383,23 +383,14 @@ window.addEventListener('DOMContentLoaded', () => {
         Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--t2').trim();
     }
     
-    // Restaurar módulo activo guardado
+    // Restaurar módulo activo guardado (sin delay para evitar flash)
     const savedModule = localStorage.getItem('f360_activeModule') || 'h';
     if(savedModule !== 'h') {
-        ct = savedModule;
-        // Restaurar módulos sin delay
-        const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
-        const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => 
-            b.innerText.includes(moduleMap[savedModule] || 'Dashboard')
-        );
-        if(moduleBtn) {
-            document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
-            moduleBtn.classList.add('on');
-            ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k => {
-                const e = document.getElementById('p-'+k);
-                if(e) e.classList.toggle('vis', k === savedModule);
-            });
-        }
+        const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => {
+            const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
+            return b.innerText.includes(moduleMap[savedModule] || 'Dashboard');
+        });
+        if(moduleBtn) ST(savedModule, moduleBtn);
     }
 });
 
