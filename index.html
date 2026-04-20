@@ -7,27 +7,29 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <title>Finanzas 360 v12.6</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-// Inicializar tema inmediatamente para evitar parpadeos visuales al recargar
-const initTheme = () => {
-    const theme = localStorage.getItem('f360_theme');
+// PRIORIDAD 1: Tema + módulo - ejecutar ANTES de cualquier recurso externo
+(function() {
+    var theme = localStorage.getItem('f360_theme');
     if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
     }
-};
-initTheme();
-
-// Precargar módulo correcto DESDE EL INICIO - inyectar CSS antes de renderizar
-(function() {
-    const saved = localStorage.getItem('f360_activeModule') || 'h';
-    if (saved !== 'h') {
-        // Inyectar CSS para ocultar módulos incorrectos desde el inicio
-        document.write(`<style>#p-h,#p-g,#p-fam,#p-a,#p-d,#p-r,#p-f,#p-p,#p-b,#p-v,#p-imp,#p-cfg{display:none!important}#p-${saved}{display:block!important}</style>`);
+    var saved = localStorage.getItem('f360_activeModule') || 'h';
+    document.documentElement.setAttribute('data-mod', saved);
+    var ids = ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'];
+    var css = '';
+    for (var i = 0; i < ids.length; i++) {
+        if (ids[i] !== saved) css += '#p-' + ids[i] + ',';
+    }
+    if (css) {
+        css = css.slice(0, -1) + '{display:none!important}';
+        css += '#p-' + saved + '{display:block!important}';
+        document.write('<style>' + css + '</style>');
     }
 })();
 </script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* TEMA CLARO (Por defecto) */
 :root {
@@ -138,6 +140,8 @@ canvas.dc{display:block;margin:0 auto}
 .mt{display:flex;flex-wrap:wrap;justify-content:center;background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:6px;gap:4px;margin-bottom:4px;box-shadow:var(--shadow)}
 .mb{flex:1 1 auto;justify-content:center;padding:6px 10px;border-radius:8px;background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:background .2s,color .2s}
 .mb:hover{background:var(--bg)}.mb.on{background:var(--t1);color:var(--bg)}
+/* Resaltar botón correcto desde el inicio usando data-mod del html */
+html[data-mod="h"] .mb[data-m="h"],html[data-mod="g"] .mb[data-m="g"],html[data-mod="fam"] .mb[data-m="fam"],html[data-mod="a"] .mb[data-m="a"],html[data-mod="d"] .mb[data-m="d"],html[data-mod="r"] .mb[data-m="r"],html[data-mod="f"] .mb[data-m="f"],html[data-mod="p"] .mb[data-m="p"],html[data-mod="b"] .mb[data-m="b"],html[data-mod="v"] .mb[data-m="v"],html[data-mod="imp"] .mb[data-m="imp"],html[data-mod="cfg"] .mb[data-m="cfg"]{background:var(--t1);color:var(--bg)}
 .mod{display:none !important}.mod.vis{display:block !important}
 /* PANEL */
 .pnl{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:12px;margin-bottom:5px}
@@ -293,18 +297,18 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 
   <!-- NEW STICKY NAVIGATION BAR -->
   <div class="mt">
-    <button class="mb on" onclick="ST('h',this)">📊 Dashboard</button>
-    <button class="mb" onclick="ST('g',this)">💸 Movimientos</button>
-    <button class="mb" onclick="ST('fam',this)">👨‍🎓 Familia/Edu</button>
-    <button class="mb" onclick="ST('a',this)">🏦 Ahorros</button>
-    <button class="mb" onclick="ST('d',this)">💳 Crédito</button>
-    <button class="mb" onclick="ST('r',this)">🔄 Recurrentes</button>
-    <button class="mb" onclick="ST('f',this)">🔮 Futuro</button>
-    <button class="mb" onclick="ST('p',this)">🤝 Préstamos</button>
-    <button class="mb" onclick="ST('b',this)">💵 Débito</button>
-    <button class="mb" onclick="ST('v',this)">🚗 Vehículos</button>
-    <button class="mb" onclick="ST('imp',this)">🏛 Impuestos</button>
-    <button class="mb" onclick="ST('cfg',this)">⚙️ Config</button>
+    <button class="mb" data-m="h" onclick="ST('h',this)">📊 Dashboard</button>
+    <button class="mb" data-m="g" onclick="ST('g',this)">💸 Movimientos</button>
+    <button class="mb" data-m="fam" onclick="ST('fam',this)">👨‍🎓 Familia/Edu</button>
+    <button class="mb" data-m="a" onclick="ST('a',this)">🏦 Ahorros</button>
+    <button class="mb" data-m="d" onclick="ST('d',this)">💳 Crédito</button>
+    <button class="mb" data-m="r" onclick="ST('r',this)">🔄 Recurrentes</button>
+    <button class="mb" data-m="f" onclick="ST('f',this)">🔮 Futuro</button>
+    <button class="mb" data-m="p" onclick="ST('p',this)">🤝 Préstamos</button>
+    <button class="mb" data-m="b" onclick="ST('b',this)">💵 Débito</button>
+    <button class="mb" data-m="v" onclick="ST('v',this)">🚗 Vehículos</button>
+    <button class="mb" data-m="imp" onclick="ST('imp',this)">🏛 Impuestos</button>
+    <button class="mb" data-m="cfg" onclick="ST('cfg',this)">⚙️ Config</button>
   </div>
 </div>
 
