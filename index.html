@@ -402,7 +402,6 @@ const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d
 
 // ═══ STATE ════════════════════════════════════════════════════════════════════
 let D={m:[],ah:[],de:[],rc:[],ln:[],wa:[],fut:[],cAh:[],cDe:[],accts:[]};
-let CH={}; // Chart.js instances registry
 try{const s=localStorage.getItem('f360v12_demo2');if(s)D=JSON.parse(s)}catch(e){console.warn('Error parsing DB',e)}
 ['cAh','cDe','ln','fut','accts','cInst','cfgCats','cfgExtraConcepts','cfgTaxes','vehs','impuestos','cfgFutItems','fam','edu','cfgEduInst','cfgEduCarreras', 'cfgAcctNames'].forEach(k=>{if(!D[k])D[k]=[]});
 if(D.alertsExpanded===undefined)D.alertsExpanded=false;
