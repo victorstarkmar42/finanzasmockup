@@ -299,7 +299,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 <div id="alerts"></div>
 
 <!-- MODULE: DASHBOARD -->
-<div id="p-h" class="mod vis">
+<div id="p-h" class="mod">
   <h2 style="font-size:14px; margin-bottom:8px; color:var(--t2)">Resumen Global</h2>
   <div class="sg" id="sum"></div>
   <div id="inegi-card"></div>
@@ -383,15 +383,28 @@ window.addEventListener('DOMContentLoaded', () => {
         Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--t2').trim();
     }
     
-    // Restaurar módulo activo guardado (sin delay para evitar flash)
+    // Restaurar módulo activo guardado desde el inicio
     const savedModule = localStorage.getItem('f360_activeModule') || 'h';
-    if(savedModule !== 'h') {
-        const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => {
-            const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
-            return b.innerText.includes(moduleMap[savedModule] || 'Dashboard');
-        });
-        if(moduleBtn) ST(savedModule, moduleBtn);
+    ct = savedModule;
+    
+    // Establecer visibilidad correcta para TODOS los módulos
+    ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k => {
+        const e = document.getElementById('p-' + k);
+        if(e) e.classList.toggle('vis', k === savedModule);
+    });
+    
+    // Establecer botón activo
+    const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
+    const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => 
+        b.innerText.includes(moduleMap[savedModule])
+    );
+    if(moduleBtn) {
+        document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
+        moduleBtn.classList.add('on');
     }
+    
+    // Renderizar contenido del módulo
+    rAll();
 });
 
 const APP_VER = '12.6.0';
