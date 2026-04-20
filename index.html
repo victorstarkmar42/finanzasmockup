@@ -137,9 +137,20 @@ button:disabled{opacity:.5;cursor:not-allowed}
 canvas.dc{display:block;margin:0 auto}
 .leg{margin-top:5px}.li{display:flex;align-items:center;gap:4px;margin:2px 0}.li .dot{width:8px;height:8px;border-radius:2px}.li span{font-size:9px;color:var(--t2)}
 /* MODULE TABS (STICKY TOP & WRAPPING GRID) */
-.mt{display:flex;flex-wrap:wrap;justify-content:center;background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:6px;gap:4px;margin-bottom:4px;box-shadow:var(--shadow)}
+.mt{display:flex;flex-wrap:wrap;justify-content:center;background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:6px;gap:4px;margin-bottom:4px;box-shadow:var(--shadow);transition:all .3s ease;max-height:1000px;overflow:hidden}
+.mt.collapsed{max-height:0;padding:0;border:none;margin:0;overflow:hidden}
 .mb{flex:1 1 auto;justify-content:center;padding:6px 10px;border-radius:8px;background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:background .2s,color .2s}
 .mb:hover{background:var(--bg)}.mb.on{background:var(--t1);color:var(--bg)}
+/* HAMBURGER BUTTON */
+.hamburger-toggle{display:none;background:var(--card);border:1px solid var(--brd);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;align-items:center;justify-content:center;transition:all .2s;width:44px;height:44px}
+.hamburger-toggle:hover{background:var(--bg);border-color:var(--blue)}
+.hamburger-toggle.open{color:var(--blue)}
+@media(max-width:768px){
+  .hamburger-toggle{display:flex}
+  .mt{position:absolute;top:100%;left:0;right:0;width:100%;flex-direction:column;gap:2px;border-radius:0;margin:0;padding:8px;z-index:999;background:var(--card);border:1px solid var(--brd);border-top:none;box-shadow:0 8px 16px rgba(0,0,0,0.15);max-height:600px}
+  .mt.collapsed{display:none}
+  .mb{flex:1;justify-content:flex-start;width:100%;padding:10px;font-size:12px}
+}
 /* Resaltar botón correcto desde el inicio usando data-mod del html */
 html[data-mod="h"] .mb[data-m="h"],html[data-mod="g"] .mb[data-m="g"],html[data-mod="fam"] .mb[data-m="fam"],html[data-mod="a"] .mb[data-m="a"],html[data-mod="d"] .mb[data-m="d"],html[data-mod="r"] .mb[data-m="r"],html[data-mod="f"] .mb[data-m="f"],html[data-mod="p"] .mb[data-m="p"],html[data-mod="b"] .mb[data-m="b"],html[data-mod="v"] .mb[data-m="v"],html[data-mod="imp"] .mb[data-m="imp"],html[data-mod="cfg"] .mb[data-m="cfg"]{background:var(--t1);color:var(--bg)}
 .mod{display:none !important}.mod.vis{display:block !important}
@@ -296,19 +307,22 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
   </div></div>
 
   <!-- NEW STICKY NAVIGATION BAR -->
-  <div class="mt">
-    <button class="mb" data-m="h" onclick="ST('h',this)">📊 Dashboard</button>
-    <button class="mb" data-m="g" onclick="ST('g',this)">💸 Movimientos</button>
-    <button class="mb" data-m="fam" onclick="ST('fam',this)">👨‍🎓 Familia/Edu</button>
-    <button class="mb" data-m="a" onclick="ST('a',this)">🏦 Ahorros</button>
-    <button class="mb" data-m="d" onclick="ST('d',this)">💳 Crédito</button>
-    <button class="mb" data-m="r" onclick="ST('r',this)">🔄 Recurrentes</button>
-    <button class="mb" data-m="f" onclick="ST('f',this)">🔮 Futuro</button>
-    <button class="mb" data-m="p" onclick="ST('p',this)">🤝 Préstamos</button>
-    <button class="mb" data-m="b" onclick="ST('b',this)">💵 Débito</button>
-    <button class="mb" data-m="v" onclick="ST('v',this)">🚗 Vehículos</button>
-    <button class="mb" data-m="imp" onclick="ST('imp',this)">🏛 Impuestos</button>
-    <button class="mb" data-m="cfg" onclick="ST('cfg',this)">⚙️ Config</button>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+    <button class="hamburger-toggle" id="menu-toggle" onclick="toggleMenuMobile()">☰</button>
+    <div class="mt" id="modules-menu">
+      <button class="mb" data-m="h" onclick="ST('h',this);closeMenuMobile()">📊 Dashboard</button>
+      <button class="mb" data-m="g" onclick="ST('g',this);closeMenuMobile()">💸 Movimientos</button>
+      <button class="mb" data-m="fam" onclick="ST('fam',this);closeMenuMobile()">👨‍🎓 Familia/Edu</button>
+      <button class="mb" data-m="a" onclick="ST('a',this);closeMenuMobile()">🏦 Ahorros</button>
+      <button class="mb" data-m="d" onclick="ST('d',this);closeMenuMobile()">💳 Crédito</button>
+      <button class="mb" data-m="r" onclick="ST('r',this);closeMenuMobile()">🔄 Recurrentes</button>
+      <button class="mb" data-m="f" onclick="ST('f',this);closeMenuMobile()">🔮 Futuro</button>
+      <button class="mb" data-m="p" onclick="ST('p',this);closeMenuMobile()">🤝 Préstamos</button>
+      <button class="mb" data-m="b" onclick="ST('b',this);closeMenuMobile()">💵 Débito</button>
+      <button class="mb" data-m="v" onclick="ST('v',this);closeMenuMobile()">🚗 Vehículos</button>
+      <button class="mb" data-m="imp" onclick="ST('imp',this);closeMenuMobile()">🏛 Impuestos</button>
+      <button class="mb" data-m="cfg" onclick="ST('cfg',this);closeMenuMobile()">⚙️ Config</button>
+    </div>
   </div>
 </div>
 
@@ -400,6 +414,24 @@ const ACTIVE_THREATS = [
     }
 ];
 
+const toggleMenuMobile = () => {
+    const menu = document.getElementById('modules-menu');
+    const toggle = document.getElementById('menu-toggle');
+    if(menu) {
+        menu.classList.toggle('collapsed');
+        toggle.classList.toggle('open');
+    }
+};
+
+const closeMenuMobile = () => {
+    const menu = document.getElementById('modules-menu');
+    const toggle = document.getElementById('menu-toggle');
+    if(window.innerWidth <= 768) {
+        menu.classList.add('collapsed');
+        toggle.classList.remove('open');
+    }
+};
+
 const toggleTheme = () => {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('f360_theme', isDark ? 'dark' : 'light');
@@ -444,6 +476,21 @@ window.addEventListener('DOMContentLoaded', () => {
     // Eliminar CSS temporal de precarga - ya no es necesario, .vis controla ahora
     const preloadCss = document.getElementById('preload-css');
     if (preloadCss) preloadCss.remove();
+    
+    // Inicializar menú colapsado en móvil
+    const initMenuState = () => {
+        const menu = document.getElementById('modules-menu');
+        const toggle = document.getElementById('menu-toggle');
+        if(window.innerWidth <= 768) {
+            if(menu) menu.classList.add('collapsed');
+            if(toggle) toggle.classList.remove('open');
+        } else {
+            if(menu) menu.classList.remove('collapsed');
+            if(toggle) toggle.classList.remove('open');
+        }
+    };
+    initMenuState();
+    window.addEventListener('resize', initMenuState);
 });
 
 const APP_VER = '12.6.0';
