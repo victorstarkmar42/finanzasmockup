@@ -212,10 +212,10 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 /* MODAL TARJETA */
 .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:2000;display:none;align-items:center;justify-content:center;animation:fadeIn 0.2s ease}
 .modal-overlay.show{display:flex}
-.modal-content{background:var(--card);border-radius:var(--rl);padding:20px;max-width:600px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideInUp 0.3s ease}
+.modal-content{background:var(--card);border-radius:var(--rl);padding:20px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3);animation:slideInUp 0.3s ease;display:flex;flex-direction:column}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 @keyframes slideInUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
-.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--brd)}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--brd);flex-shrink:0}
 .modal-header h2{font-size:18px;font-weight:700;color:var(--t1);margin:0}
 .modal-close{background:none;border:none;font-size:24px;color:var(--t2);cursor:pointer;padding:0;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
 .modal-close:hover{color:var(--red)}
@@ -225,7 +225,8 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 .modal-stat{background:var(--bg);border-radius:8px;padding:10px}
 .modal-stat-label{font-size:9px;color:var(--t3);text-transform:uppercase;margin-bottom:4px}
 .modal-stat-value{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
-.modal-chart{height:250px;margin-bottom:12px}
+.modal-chart{height:250px;margin-bottom:12px;position:relative;width:100%}
+.modal-chart canvas{width:100% !important;height:100% !important}
 .modal-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .modal-actions button{flex:1;min-width:100px}
 .crd.clickable{cursor:pointer;position:relative}
@@ -401,6 +402,7 @@ const venceAlert=fv=>{if(!fv)return'';const d2=df(fv);if(d2===null)return'';if(d
 
 // ═══ STATE ════════════════════════════════════════════════════════════════════
 let D={m:[],ah:[],de:[],rc:[],ln:[],wa:[],fut:[],cAh:[],cDe:[],accts:[]};
+let CH={}; // Chart.js instances registry
 try{const s=localStorage.getItem('f360v12_demo2');if(s)D=JSON.parse(s)}catch(e){console.warn('Error parsing DB',e)}
 ['cAh','cDe','ln','fut','accts','cInst','cfgCats','cfgExtraConcepts','cfgTaxes','vehs','impuestos','cfgFutItems','fam','edu','cfgEduInst','cfgEduCarreras', 'cfgAcctNames'].forEach(k=>{if(!D[k])D[k]=[]});
 if(D.alertsExpanded===undefined)D.alertsExpanded=false;
@@ -1330,12 +1332,68 @@ const uRec=id=>{const r=D.rc.find(x=>x.id===id);if(!r)return;const mEl=document.
 const rFut=()=>{
 const lastI=D.m.filter(m=>m.t==='ingreso').slice(-1)[0],ingM=lastI?Number(lastI.monto||0):0;const r=calcR(),gF=r.gN+r.gD+r.gA,libre=ingM-gF;
 const futOpts=D.cfgFutItems.map(i=>`<option value="${i}">${i}</option>`).join('')+`<option value="_o">+ Nuevo objetivo...</option>`;
-document.getElementById('p-f').innerHTML=`<div class="pnl"><h3>🔮 Asesor Financiero 360</h3><p style="font-size:10px;color:var(--t3);margin-bottom:8px">Analiza la viabilidad de una compra y compara escenarios (Contado vs. Crédito con/sin intereses).</p><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px"><div class="sc blu"><label>Ingreso Proyectado</label><div class="v">$${fm(ingM)}</div></div><div class="sc"><label>Gastos base</label><div class="v">$${fm(gF)}</div></div><div class="sc ${libre>=0?'pos':'neg'}"><label>Flujo libre actual</label><div class="v">$${fm(libre)}</div></div></div>
+document.getElementById('p-f').innerHTML=`<div class="pnl"><h3>🔮 Asesor Financiero 360</h3><p style="font-size:10px;color:var(--t3);margin-bottom:8px">Analiza la viabilidad de una compra y compara escenarios (Contado vs. Crédito con/sin intereses). Visualiza gráficamente cómo impacta en tu presupuesto.</p><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px"><div class="sc blu"><label>Ingreso Proyectado</label><div class="v">$${fm(ingM)}</div></div><div class="sc"><label>Gastos base</label><div class="v">$${fm(gF)}</div></div><div class="sc ${libre>=0?'pos':'neg'}"><label>Flujo libre actual</label><div class="v">$${fm(libre)}</div></div></div>
 <div class="fg2"><div class="fld"><label>¿Qué deseas adquirir?</label><select id="ft-d" onchange="if(this.value==='_o'){const v=prompt('Nuevo objetivo:');if(v){D.cfgFutItems.push(v.trim());sv();rFut();setTimeout(()=>document.getElementById('ft-d').value=v.trim(),10)}else{rFut()}}">${futOpts}</select></div><div class="fld"><label>Costo Total ($)</label><input id="ft-c" type="number" step="0.01" placeholder="Ej. 15000"></div></div>
 <div class="fg4" style="margin-top:4px"><div class="fld"><label>Enganche ($)</label><input id="ft-e" type="number" step="0.01" value="0"></div><div class="fld"><label>Plazo (Meses)</label><input id="ft-m" type="number" min="1" value="12"></div><div class="fld"><label>Tasa Anual (TAE%)</label><input id="ft-t" type="number" step="0.01" value="0" placeholder="0 para MSI"></div><div class="fld"><label>Ingreso ($/mes)</label><input id="ft-i" type="number" step="0.01" value="${ingM.toFixed(2)}" title="Modifica si esperas ganar distinto"></div></div>
 <button class="bp" style="margin-top:8px;background:var(--purple);color:#fff" onclick="cFut()">⚖️ Simular y Comparar Opciones</button>
 <div id="ft-r" style="margin-top:10px"></div></div>
-${D.fut?.length?`<div class="cg" style="margin-top:10px">${D.fut.map(f=>`<div class="crd"><div class="crd-h"><div class="crd-t">${f.d}</div><button class="bre bsm" onclick="D.fut=D.fut.filter(x=>x.id!=='${f.id}');sv();rFut()">✕</button></div><div class="crd-v" style="color:${f.ok?'var(--green)':'var(--red)'}">$${fm(f.c)}</div><div class="crd-r"><span>${f.t==='c'?'Contado':f.ms+' meses'}</span><span class="badge ${f.ok?'b-gr':'b-re'}">${f.ok?'✅ VIABLE':'❌ NO VIABLE'}</span></div>${f.e>0?`<div style="font-size:9px;color:var(--t3);margin-bottom:4px">Enganche: $${fm(f.e)}</div>`:-''}${f.msg?`<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--brd)"><div style="font-weight:700;font-size:10px;color:${f.ok?'var(--greent)':'var(--redt)'}">${f.msg}</div><div style="font-size:9px;color:var(--t2);margin-top:3px;line-height:1.4">${f.detail}</div></div>`:-''}</div>`).join('')}</div>`:-''}`;
+<div id="fut-objectives-sec" style="margin-top:16px"></div>`;
+renderFutureObjectives();
+};
+
+const renderFutureObjectives = () => {
+  const container = document.getElementById('fut-objectives-sec');
+  if(!container || !D.fut?.length) {
+    if(container) container.innerHTML = '';
+    return;
+  }
+  
+  const lastI = D.m.filter(m=>m.t==='ingreso').slice(-1)[0];
+  const ingM = lastI ? Number(lastI.monto||0) : 0;
+  const r = calcR();
+  const gF = r.gN+r.gD+r.gA;
+  const libre = ingM - gF;
+  
+  let html = `<h3 style="font-size:13px;margin-bottom:8px;font-weight:600">💼 Objetivos Guardados</h3>
+  <div class="cg">`;
+  
+  D.fut.forEach(f => {
+    const monthsToAchieve = f.ms || (libre > 0 ? Math.ceil(f.c / libre) : Infinity);
+    const projMoney = libre * monthsToAchieve;
+    const totalWithInterests = f.t === 'cr' ? (f.c > 0 ? f.c * (1 + (f.int||0)/100/12*f.ms) : 0) : 0;
+    
+    html += `
+    <div class="crd clickable" style="cursor:pointer;border-left:4px solid ${f.ok?'var(--green)':'var(--red)'}" onclick="openFutureObjectiveDetail('${f.id}')">
+      <div class="crd-h">
+        <div>
+          <div style="display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-bottom:4px">
+            <span class="badge ${f.ok?'b-gr':'b-re'}">${f.ok?'✅ VIABLE':'❌ DESAFIANTE'}</span>
+            <span class="badge b-gy">${f.t==='c'?'Contado':'Crédito '+f.ms+'m'}</span>
+          </div>
+          <div class="crd-t" style="font-size:13px">${f.d}</div>
+        </div>
+        <button class="bre bsm" onclick="event.stopPropagation();D.fut=D.fut.filter(x=>x.id!=='${f.id}');sv();rFut()">✕</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:baseline;margin:8px 0">
+        <span class="crd-v" style="color:${f.ok?'var(--green)':'var(--red)'}">$${fm(f.c)}</span>
+        <div style="font-size:10px;color:var(--t3)">
+          ${f.t==='c'?`<div>Lograrás en: <b style="color:var(--blue)">${monthsToAchieve} meses</b></div>`:
+          `<div>Cuota: <b style="color:var(--purple)">$${fm(f.pm||f.c/f.ms)}/mes</b></div><div>Intereses: <b style="color:var(--amber)">$${fm(f.int||0)}</b></div>`}
+        </div>
+      </div>
+      <div class="btk" style="height:3px;margin:6px 0">
+        <div class="bfl" style="width:${Math.min((projMoney/f.c)*100,100)}%;background:var(--blue)"></div>
+      </div>
+      <div style="font-size:9px;color:var(--t2);display:flex;justify-content:space-between">
+        <span>Progreso: ${Math.min(Math.round((projMoney/f.c)*100),100)}%</span>
+        <span>${f.msg?f.msg.substring(0,30)+'...':'Sin notas'}</span>
+      </div>
+    </div>
+    `;
+  });
+  
+  html += `</div>`;
+  container.innerHTML = html;
 };
 
 const makeSavGoal=(name, amount)=>{D.ah.push({id:uid(),n:name,s:0,m:amount,t:0,vinc:'',no:'Generado por Simulador',h:[{f:td(),s:0}]});sv();alert(`Meta de ahorro "${name}" creada por $${fm(amount)}.`);ST('a')};
@@ -2277,10 +2335,233 @@ document.addEventListener('DOMContentLoaded', () => {
       if(e.target === overlay) closeCardModal();
     });
   }
+  const futOverlay = document.getElementById('future-overlay');
+  if(futOverlay) {
+    futOverlay.addEventListener('click', (e) => {
+      if(e.target === futOverlay) closeFutureObjectiveDetail();
+    });
+  }
 });
+
+// ═══ MODAL OBJETIVO FUTURO ════════════════════════════════════════════════════
+const openFutureObjectiveDetail = (id) => {
+  const obj = D.fut.find(x => x.id === id);
+  if(!obj) return;
+  
+  const lastI = D.m.filter(m=>m.t==='ingreso').slice(-1)[0];
+  const ingM = lastI ? Number(lastI.monto||0) : 0;
+  const r = calcR();
+  const gF = r.gN + r.gD + r.gA;
+  const libre = ingM - gF;
+  
+  const modal = document.getElementById('future-modal');
+  const overlay = document.getElementById('future-overlay');
+  if(!modal || !overlay) return;
+  
+  // Get theme colors
+  const root = getComputedStyle(document.documentElement);
+  const colorBlue = root.getPropertyValue('--blue').trim() || '#2563eb';
+  const colorGreen = root.getPropertyValue('--green').trim() || '#22c55e';
+  const colorRed = root.getPropertyValue('--red').trim() || '#ef4444';
+  const colorCard = root.getPropertyValue('--card').trim() || '#fff';
+  
+  // Datos para gráficas
+  const monthsToAchieve = obj.ms || (libre > 0 ? Math.ceil(obj.c / libre) : 60);
+  const projectionMonths = Math.min(monthsToAchieve + 3, 36);
+  
+  let balanceProjection = [];
+  let labels = [];
+  for(let i = 0; i <= projectionMonths; i++) {
+    balanceProjection.push(Math.min(libre * i, obj.c));
+    labels.push(i === 0 ? 'Hoy' : i + 'm');
+  }
+  
+  // Comparativa: Contado vs Crédito
+  const monthsContado = libre > 0 ? Math.ceil(obj.c / libre) : Infinity;
+  const pagoMesCred = obj.c / (obj.ms || 12);
+  
+  let costComparison = [
+    {label: 'Contado', value: obj.c, color: colorGreen},
+    {label: 'Crédito (Neto)', value: obj.c, color: colorBlue},
+    {label: 'Con Intereses', value: obj.c * (1 + (obj.int||0)/100/12*(obj.ms||12)), color: colorRed}
+  ];
+  
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h2>${obj.d}</h2>
+          <div style="font-size:11px;color:var(--t2);margin-top:4px">
+            <span class="badge ${obj.ok?'b-gr':'b-re'}" style="margin-right:4px">${obj.ok?'✅ VIABLE':'⚠️ DESAFIANTE'}</span>
+            <span class="badge b-gy">${obj.t==='c'?'Compra Contado':'Crédito a '+obj.ms+' meses'}</span>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeFutureObjectiveDetail()">✕</button>
+      </div>
+      
+      <div class="modal-section">
+        <h3>📊 Proyección de Ahorro</h3>
+        <div class="modal-chart">
+          <canvas id="future-chart-projection" width="500" height="250"></canvas>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;font-size:10px">
+          <div style="background:var(--bg);padding:8px;border-radius:6px">
+            <div style="color:var(--t3);margin-bottom:2px">Flujo mensual libre</div>
+            <div style="font-size:14px;font-weight:700;color:var(--blue)">$${fm(libre)}</div>
+          </div>
+          <div style="background:var(--bg);padding:8px;border-radius:6px">
+            <div style="color:var(--t3);margin-bottom:2px">Lograrás en</div>
+            <div style="font-size:14px;font-weight:700;color:${monthsContado <= 12 ? 'var(--green)' : 'var(--amber)'}">${monthsContado} meses</div>
+          </div>
+        </div>
+      </div>
+      
+      ${obj.t !== 'c' ? `
+      <div class="modal-section">
+        <h3>💰 Comparativa: Contado vs Crédito</h3>
+        <div class="modal-chart">
+          <canvas id="future-chart-comparison" width="500" height="250"></canvas>
+        </div>
+        <div style="background:var(--bg);padding:8px;border-radius:6px;margin-top:6px;font-size:10px">
+          <div style="display:flex;justify-content:space-between;margin:4px 0;padding-bottom:4px;border-bottom:1px solid var(--brd)">
+            <span style="color:var(--t2)">Pago mensual</span>
+            <span style="font-weight:600;color:var(--purple)">$${fm(pagoMesCred)}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin:4px 0;padding-bottom:4px;border-bottom:1px solid var(--brd)">
+            <span style="color:var(--t2)">Intereses totales</span>
+            <span style="font-weight:600;color:var(--red)">$${fm(obj.c * (obj.int||0)/100/12*(obj.ms||12))}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin:4px 0;color:${obj.ok?'var(--greent)':'var(--redt)'}">
+            <span style="font-weight:600">${obj.ok?'✅ Viable':'⚠️ Desafiante'}</span>
+            <span style="font-weight:700">${obj.msg||'Ver detalles'}</span>
+          </div>
+        </div>
+      </div>
+      ` : ''}
+      
+      <div class="modal-section">
+        <h3>📋 Detalles</h3>
+        <div style="background:var(--bg);border-radius:8px;padding:10px;font-size:10px;line-height:1.6;color:var(--t2)">
+          ${obj.msg ? '<div style="font-weight:600;color:var(--t1);margin-bottom:4px">' + obj.msg + '</div>' : ''}
+          ${obj.detail ? '<div>' + obj.detail + '</div>' : ''}
+          ${!obj.msg ? '<div style="color:var(--t3)">Sin detalles registrados.</div>' : ''}
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="bp" onclick="closeFutureObjectiveDetail()">Cerrar</button>
+      </div>
+    </div>
+  `;
+  
+  overlay.classList.add('show');
+  
+  setTimeout(() => {
+    if(typeof Chart !== 'undefined') {
+      // Gráfica de proyección
+      if(CH['future-projection']) CH['future-projection'].destroy();
+      const ctxProj = document.getElementById('future-chart-projection')?.getContext('2d');
+      if(ctxProj) {
+        CH['future-projection'] = new Chart(ctxProj, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [{
+              label: 'Ahorro acumulado',
+              data: balanceProjection,
+              borderColor: colorBlue,
+              backgroundColor: 'rgba(37,99,235,0.1)',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+              pointBackgroundColor: colorBlue,
+              pointBorderColor: colorCard,
+              pointBorderWidth: 2,
+              pointHoverRadius: 5
+            }, {
+              label: 'Meta',
+              data: Array(labels.length).fill(obj.c),
+              borderColor: colorGreen,
+              borderWidth: 2,
+              borderDash: [5,5],
+              fill: false,
+              pointRadius: 0,
+              tension: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {display: true, position: 'top', labels: {font:{size:10}, boxWidth:12, padding:8}},
+              tooltip: {
+                callbacks: {
+                  label: c => {
+                    if(c.dataset.label === 'Meta') return 'Meta: $' + fm(c.parsed.y);
+                    const pct = Math.min((c.parsed.y / obj.c) * 100, 100);
+                    return c.dataset.label + ': $' + fm(c.parsed.y) + ' (' + pct.toFixed(0) + '%)';
+                  }
+                }
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: {callback: v=>'$'+fm(v), font:{size:9}},
+                grid: {color: 'rgba(0,0,0,0.05)'}
+              },
+              x: {ticks: {font:{size:8}}, grid: {display:false}}
+            }
+          }
+        });
+      }
+      
+      // Gráfica comparativa
+      if(obj.t !== 'c') {
+        if(CH['future-comparison']) CH['future-comparison'].destroy();
+        const ctxComp = document.getElementById('future-chart-comparison')?.getContext('2d');
+        if(ctxComp) {
+          CH['future-comparison'] = new Chart(ctxComp, {
+            type: 'bar',
+            data: {
+              labels: costComparison.map(x => x.label),
+              datasets: [{
+                label: 'Costo total',
+                data: costComparison.map(x => x.value),
+                backgroundColor: costComparison.map(x => x.color),
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              indexAxis: 'x',
+              plugins: {
+                legend: {display: false},
+                tooltip: {callbacks: {label: c => '$' + fm(c.parsed.y)}}
+              },
+              scales: {
+                y: {beginAtZero: true, ticks: {callback: v=>'$'+fm(v), font:{size:9}}},
+                x: {ticks: {font:{size:9}}}
+              }
+            }
+          });
+        }
+      }
+    }
+  }, 50);
+};
+
+const closeFutureObjectiveDetail = () => {
+  const overlay = document.getElementById('future-overlay');
+  if(overlay) overlay.classList.remove('show');
+};
 
 </script>
 <div id="card-overlay" class="modal-overlay"></div>
+<div id="future-overlay" class="modal-overlay"></div>
+<div id="future-modal"></div>
 </body>
 </html>
 
