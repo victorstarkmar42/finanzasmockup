@@ -18,6 +18,10 @@ const initTheme = () => {
     }
 };
 initTheme();
+
+// BLOQUEAR VISUALIZACIÓN hasta que todo esté listo
+document.write('<style>body { opacity: 0 !important; } body.ready { opacity: 1 !important; }</style>');
+window.moduleReady = () => { document.body.classList.add('ready'); };
 </script>
 <style>
 /* TEMA CLARO (Por defecto) */
@@ -46,7 +50,8 @@ html.dark {
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased; transition: background-color 0.3s, color 0.3s;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;-webkit-font-smoothing:antialiased; transition: background-color 0.3s, color 0.3s, opacity 0.3s ease;}
+body.ready { opacity: 1 !important; }
 input,select,button{font-family:inherit;font-size:12px;outline:none}
 input,select{padding:7px 9px;border:1px solid var(--brd);border-radius:8px;background:var(--inp-bg);color:var(--t1);transition:border .15s, background-color 0.3s, color 0.3s;width:100%}
 input:focus,select:focus{border-color:var(--blue)}
@@ -257,21 +262,6 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 </style>
 </head>
 <body>
-<script>
-// MÁXIMA PRIORIDAD: Aplicar módulo guardado ANTES de cualquier renderizado
-(function() {
-    const saved = localStorage.getItem('f360_activeModule') || 'h';
-    const ids = ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'];
-    
-    // Método 1: document.write para inyectar CSS
-    if (saved !== 'h') {
-        document.write(`<style>.mod{display:none!important}#p-${saved}{display:block!important}</style>`);
-    }
-    
-    // Método 2: Atributo data para que los estilos CSS lean
-    document.documentElement.setAttribute('data-module', saved);
-})();
-</script>
 <div class="app">
 
 <div class="sticky-header">
@@ -423,6 +413,9 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Renderizar contenido del módulo
     rAll();
+    
+    // ✅ MOSTRAR PÁGINA cuando está lista
+    moduleReady();
 });
 
 const APP_VER = '12.6.0';
