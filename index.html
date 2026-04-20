@@ -15,6 +15,18 @@ const initTheme = () => {
     }
 };
 initTheme();
+
+// Pre-cargar módulo guardado antes de renderizar para evitar flash
+(function() {
+    const savedModule = localStorage.getItem('f360_activeModule') || 'h';
+    const moduleIds = ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'];
+    const hiddenModules = moduleIds.filter(m => m !== savedModule).map(m => `#p-${m}`).join(', ');
+    if (hiddenModules) {
+        const style = document.createElement('style');
+        style.textContent = `${hiddenModules} { display: none !important; }`;
+        document.head.appendChild(style);
+    }
+})();
 </script>
 <style>
 /* TEMA CLARO (Por defecto) */
@@ -254,17 +266,6 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 </style>
 </head>
 <body>
-<script>
-(function(){
-  const savedModule = localStorage.getItem('f360_activeModule') || 'h';
-  if(savedModule !== 'h') {
-    document.documentElement.style.display = 'block';
-    const style = document.createElement('style');
-    style.textContent = `#p-h{display:none!important}#p-${savedModule}{display:block!important}`;
-    document.head.appendChild(style);
-  }
-})();
-</script>
 <div class="app">
 
 <div class="sticky-header">
