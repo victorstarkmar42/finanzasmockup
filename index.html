@@ -24,7 +24,7 @@
     if (css) {
         css = css.slice(0, -1) + '{display:none!important}';
         css += '#p-' + saved + '{display:block!important}';
-        document.write('<style>' + css + '</style>');
+        document.write('<style id="preload-css">' + css + '</style>');
     }
 })();
 </script>
@@ -421,6 +421,10 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // Renderizar contenido del módulo
     rAll();
+    
+    // Eliminar CSS temporal de precarga - ya no es necesario, .vis controla ahora
+    const preloadCss = document.getElementById('preload-css');
+    if (preloadCss) preloadCss.remove();
 });
 
 const APP_VER = '12.6.0';
