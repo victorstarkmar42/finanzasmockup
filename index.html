@@ -254,6 +254,17 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 </style>
 </head>
 <body>
+<script>
+(function(){
+  const savedModule = localStorage.getItem('f360_activeModule') || 'h';
+  if(savedModule !== 'h') {
+    document.documentElement.style.display = 'block';
+    const style = document.createElement('style');
+    style.textContent = `#p-h{display:none!important}#p-${savedModule}{display:block!important}`;
+    document.head.appendChild(style);
+  }
+})();
+</script>
 <div class="app">
 
 <div class="sticky-header">
@@ -383,15 +394,20 @@ window.addEventListener('DOMContentLoaded', () => {
         Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--t2').trim();
     }
     
-    // Restaurar módulo activo guardado
+    // Restaurar módulo activo guardado INMEDIATAMENTE
     const savedModule = localStorage.getItem('f360_activeModule') || 'h';
+    ct = savedModule;
     const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => {
         const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
         return b.innerText.includes(moduleMap[savedModule] || 'Dashboard');
     });
-    if(moduleBtn) {
-        setTimeout(() => ST(savedModule, moduleBtn), 100);
-    }
+    if(moduleBtn) moduleBtn.classList.add('on');
+    
+    // Mostrar solo el módulo guardado desde el inicio
+    ['h','g','fam','a','d','r','f','p','b','v','imp','cfg'].forEach(k=>{
+        const e=document.getElementById('p-'+k);
+        if(e) e.classList.toggle('vis', k===savedModule);
+    });
 });
 
 const APP_VER = '12.6.0';
