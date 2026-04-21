@@ -142,14 +142,16 @@ canvas.dc{display:block;margin:0 auto}
 .mb{flex:1 1 auto;justify-content:center;padding:6px 10px;border-radius:8px;background:transparent;color:var(--t2);font-size:11px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:4px;transition:background .2s,color .2s}
 .mb:hover{background:var(--bg)}.mb.on{background:var(--t1);color:var(--bg)}
 /* HAMBURGER BUTTON */
-.hamburger-toggle{display:none;background:var(--card);border:1px solid var(--brd);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;align-items:center;justify-content:center;transition:all .2s;width:44px;height:44px}
-.hamburger-toggle:hover{background:var(--bg);border-color:var(--blue)}
-.hamburger-toggle.open{color:var(--blue)}
+.hamburger-toggle{display:none;background:var(--card);border:1.5px solid var(--brd);border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;align-items:center;justify-content:center;transition:all .2s;width:44px;height:44px;color:var(--t2)}
+.hamburger-toggle:hover:not(.open){background:var(--bg);border-color:var(--t3);color:var(--t2)}
+.hamburger-toggle.open{color:var(--blue);border-color:var(--blue)}
 @media(max-width:768px){
   .hamburger-toggle{display:flex}
-  .mt{position:absolute;top:100%;left:0;right:0;width:100%;flex-direction:column;gap:2px;border-radius:0;margin:0;padding:8px;z-index:999;background:var(--card);border:1px solid var(--brd);border-top:none;box-shadow:0 8px 16px rgba(0,0,0,0.15);max-height:600px}
+  .mt{position:absolute;top:100%;left:0;right:0;width:100%;flex-direction:column;gap:0;border-radius:0;margin:0;padding:0;z-index:999;background:var(--card);border:1px solid var(--brd);border-top:2px solid var(--blue);box-shadow:0 8px 16px rgba(0,0,0,0.2);max-height:600px;overflow-y:auto}
   .mt.collapsed{display:none}
-  .mb{flex:1;justify-content:flex-start;width:100%;padding:10px;font-size:12px}
+  .mb{flex:1;justify-content:flex-start;width:100%;padding:12px 14px;font-size:12px;border-bottom:1px solid var(--brd);transition:all .15s;color:var(--t2)}
+  .mb:hover{background:rgba(37,99,235,0.08);color:var(--t1)}
+  .mb.on{background:rgba(37,99,235,0.15);color:var(--blue);border-left:3px solid var(--blue);padding-left:11px}
 }
 /* Resaltar botón correcto desde el inicio usando data-mod del html */
 html[data-mod="h"] .mb[data-m="h"],html[data-mod="g"] .mb[data-m="g"],html[data-mod="fam"] .mb[data-m="fam"],html[data-mod="a"] .mb[data-m="a"],html[data-mod="d"] .mb[data-m="d"],html[data-mod="r"] .mb[data-m="r"],html[data-mod="f"] .mb[data-m="f"],html[data-mod="p"] .mb[data-m="p"],html[data-mod="b"] .mb[data-m="b"],html[data-mod="v"] .mb[data-m="v"],html[data-mod="imp"] .mb[data-m="imp"],html[data-mod="cfg"] .mb[data-m="cfg"]{background:var(--t1);color:var(--bg)}
@@ -419,7 +421,12 @@ const toggleMenuMobile = () => {
     const toggle = document.getElementById('menu-toggle');
     if(menu) {
         menu.classList.toggle('collapsed');
-        toggle.classList.toggle('open');
+        // Solo mostrar el estado open cuando el menú está visible (no colapsado)
+        if(menu.classList.contains('collapsed')) {
+            toggle.classList.remove('open');
+        } else {
+            toggle.classList.add('open');
+        }
     }
 };
 
