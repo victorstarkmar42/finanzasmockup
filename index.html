@@ -481,8 +481,14 @@ window.addEventListener('DOMContentLoaded', () => {
         moduleBtn.classList.add('on');
     }
     
-    // Renderizar contenido del módulo
-    rAll();
+    // Renderizar contenido del módulo con delay para asegurar que Chart.js esté cargado
+    if(typeof Chart !== 'undefined') {
+        rAll();
+    } else {
+        setTimeout(() => {
+            rAll();
+        }, 500);
+    }
     
     // Eliminar CSS temporal de precarga - ya no es necesario, .vis controla ahora
     const preloadCss = document.getElementById('preload-css');
