@@ -329,7 +329,7 @@ tr:last-child td{border-bottom:none}tr:hover td{background:var(--bg)}
 
   <!-- NAVIGATION HEADER (SIMILAR TO COCHINITA PRO STYLE) -->
   <div class="nav-header">
-    <div class="nav-title"><i class="fa fa-home"></i> Finanzas 360</div>
+    <div class="nav-title"><i class="fa fa-bar-chart"></i><span id="nav-module-name">Dashboard</span></div>
     <button class="hamburger-toggle" id="menu-toggle" onclick="toggleMenuMobile()">☰</button>
   </div>
 
@@ -499,14 +499,20 @@ window.addEventListener('DOMContentLoaded', () => {
         if(e) e.classList.toggle('vis', k === savedModule);
     });
     
-    // Establecer botón activo
-    const moduleMap = {'h':'Dashboard','g':'Movimientos','fam':'Familia','a':'Ahorros','d':'Crédito','r':'Recurrentes','f':'Futuro','p':'Préstamos','b':'Débito','v':'Vehículos','imp':'Impuestos','cfg':'Config'};
+    // Establecer botón activo y actualizar header
     const moduleBtn = Array.from(document.querySelectorAll('.mb')).find(b => 
-        b.innerText.includes(moduleMap[savedModule])
+        b.getAttribute('data-m') === savedModule
     );
     if(moduleBtn) {
         document.querySelectorAll('.mb').forEach(b => b.classList.remove('on'));
         moduleBtn.classList.add('on');
+        // Actualizar nombre y ícono del módulo en el header
+        const nameSpan=document.getElementById('nav-module-name');
+        const iconEl=document.querySelector('.nav-title i');
+        if(nameSpan)nameSpan.textContent=moduleNames[savedModule]||'Finanzas 360';
+        if(iconEl){
+            iconEl.className='fa '+moduleIcons[savedModule];
+        }
     }
     
     // Renderizar contenido del módulo con delay para asegurar que Chart.js esté cargado
@@ -2160,6 +2166,8 @@ const cancelImpEdit=()=>{impEditIndex=null;rImp();};
 const deleteImp=idx=>{if(!D.impuestos||!D.impuestos[idx])return;confirmModal('🗑 Eliminar Impuesto','¿Eliminar este impuesto?',ok=>{if(!ok)return;D.impuestos.splice(idx,1);if(impEditIndex===idx)impEditIndex=null;else if(impEditIndex>idx)impEditIndex--;sv();rImp();rAll()})};
 
 // ═══ NAV ══════════════════════════════════════════════════════════════════════
+const moduleNames={h:'Dashboard',g:'Movimientos',fam:'Familia/Edu',a:'Ahorros',d:'Crédito',r:'Recurrentes',f:'Futuro',p:'Préstamos',b:'Débito',v:'Vehículos',imp:'Impuestos',cfg:'Config'};
+const moduleIcons={h:'fa-bar-chart',g:'fa-exchange',fam:'fa-graduation-cap',a:'fa-university',d:'fa-credit-card',r:'fa-refresh',f:'fa-line-chart',p:'fa-users',b:'fa-money',v:'fa-car',imp:'fa-file-text',cfg:'fa-cog'};
 const ST=(t,el)=>{
   ct=t;
   localStorage.setItem('f360_activeModule', t);
@@ -2170,6 +2178,13 @@ const ST=(t,el)=>{
   });
   document.querySelectorAll('.mb').forEach(b=>b.classList.remove('on'));
   if(el)el.classList.add('on');
+  // Actualizar nombre del módulo en el header
+  const nameSpan=document.getElementById('nav-module-name');
+  const iconEl=document.querySelector('.nav-title i');
+  if(nameSpan)nameSpan.textContent=moduleNames[t]||'Finanzas 360';
+  if(iconEl){
+    iconEl.className='fa '+moduleIcons[t];
+  }
   rAll();
 };
 const setP=p=>{
